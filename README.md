@@ -9,6 +9,10 @@ The grunt-treeshake task uses a CommonJS-like syntax to define files, allowing t
 
 	npm install grunt-treeshake --save-dev
 
+###Setup gruntfile task
+
+	
+
 ###How to use
 
 To have your JavaScript libraries support tree shaking, each function should be wrapped in a CommonJS-like structure. It is best practice to have one definition per file.
@@ -18,7 +22,7 @@ To have your JavaScript libraries support tree shaking, each function should be 
 			console.log('myMethod called');		}
 	});
 
-The define expects that you will return a value. The value can be anything. Typically it will be either a function or object but can represent anything even primitive values such as a Boolean, String, Number, or Array.
+The define function expects that you will return a value. The value can be anything. Typically it will return either a function or object but can represent anything even primitive values such as a Boolean, String, Number, or Array.
 
 Definitions can be referenced by other definitions like so:
 
