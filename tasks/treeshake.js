@@ -4,8 +4,8 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
 
     var options,
-        header = grunt.file.read('tasks/lib/header.js'),
-        footer = grunt.file.read('tasks/lib/footer.js'),
+        header = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/header.js'),
+        footer = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/footer.js'),
         cleanReservedWords = new RegExp('(import|append|internal|define)', 'gi'),
         everythingElse = /[^\*\.\w\d]/g;
 
