@@ -5,13 +5,42 @@ A grunt task used to import and compile JavaScript files referenced in your proj
 
 The grunt-treeshake task uses a CommonJS-like syntax to define files, allowing treeshake to import only the files referenced into the build file. At runtime, the build file will initialize synchronously providing a public API to library.
 
-###Install treeshake
+###Getting started
+
+This plugin requires Grunt ~0.4.0
+
+If you haven't used Grunt before, be sure to check out the [Getting Started guide](http://gruntjs.com/getting-started), as it explains how to create a Gruntfile as well as install and use Grunt plugins. Once you're familiar with that process, you may install this plugin with this command:
 
 	npm install grunt-treeshake --save-dev
 
-###Setup gruntfile task
+Once the plugin has been installed, it may be enabled inside your Gruntfile with this line of JavaScript:
 
-	
+	grunt.loadNpmTasks('grunt-treeshake');
+
+###Grunt options
+
+####wrap
+
+**Type:** String
+
+**Default:** undefined
+
+Wrap all of the code in a closure, an easy way to make sure nothing is leaking. For variables that need to be public exports and global variables are made available. A namespace for the wrap shall provide access to the API.
+
+**Example**
+
+	treeshake: {
+            test: {
+                options: {
+                    wrap: 'demo'
+                },
+                build: ['demo/*.js'], // reference to build files
+                files: {
+                    'demo/treeshaked_lib.js': ['src/**/*.js']
+                }
+            }
+        }
+
 
 ###How to use
 
