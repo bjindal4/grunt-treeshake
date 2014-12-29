@@ -2,9 +2,10 @@
 module.exports = function (grunt) {
 
     grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-clean');
 
     var header, footer, cleanReservedWords, everythingElse;
-    cleanReservedWords = new RegExp('(import|append|internal|define)', 'gi');
+    cleanReservedWords = new RegExp('(import|internal|define)', 'gi');
     everythingElse = /[^\*\.\w\d]/g;
 
     if (grunt.file.exists('./node_modules/grunt-treeshake/tasks/lib/header.js')) {
@@ -254,19 +255,23 @@ module.exports = function (grunt) {
             if (options.minify) {
                 uglify[target + '_min'] = {
                     options: {
-                        report: 'gzip',
-                        wrap: options.wrap,
-                        exportAll: false
+                        wrap: options.wrap
                     },
                     files: buildMinFiles
                 };
             }
+
+            var clean = grunt.config.get('clean') || {};
+            clean[target] = '.tmp';
 
             grunt.config.set('uglify', uglify);
             grunt.task.run('uglify:' + target);
             if (options.minify) {
                 grunt.task.run('uglify:' + target + '_min');
             }
+
+            grunt.config.set('clean', clean);
+            grunt.task.run('clean:' + target);
         }
     }
 
@@ -287,5 +292,8 @@ module.exports = function (grunt) {
         //grunt.log.writeln(files);
         writeSources(files, '.tmp/treeshake.js');
         writeFiles(this.files[0].dest, ['.tmp/treeshake.js'], options, target);
+
+        //grunt.file.delete('.tmp');
+
     });
 };
