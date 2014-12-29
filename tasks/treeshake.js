@@ -1,11 +1,19 @@
 'use strict';
 module.exports = function (grunt) {
+
     grunt.loadNpmTasks('grunt-contrib-uglify');
 
-    var header = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/header.js'),
-        footer = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/footer.js'),
-        cleanReservedWords = new RegExp('(import|append|internal|define)', 'gi'),
-        everythingElse = /[^\*\.\w\d]/g;
+    var header, footer, cleanReservedWords, everythingElse;
+    cleanReservedWords = new RegExp('(import|append|internal|define)', 'gi');
+    everythingElse = /[^\*\.\w\d]/g;
+
+    if (grunt.file.exists('./node_modules/grunt-treeshake/tasks/lib/header.js')) {
+        header = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/header.js');
+        footer = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/footer.js');
+    } else {
+        header = grunt.file.read('./tasks/lib/header.js');
+        footer = grunt.file.read('./tasks/lib/footer.js');
+    }
 
     /**
      * Remove comments from string to prevent accidental parsing
@@ -99,7 +107,7 @@ module.exports = function (grunt) {
 
     function getFileNameFromContents(path) {
         var contents = grunt.file.read(path),
-            rx = new RegExp('(append|internal|define)([\\W\\s]+(("|\')[\\w|\\.]+\\3))+', 'gim'),
+            rx = new RegExp('(internal|define)([\\W\\s]+(("|\')[\\w|\\.]+\\3))+', 'gim'),
             matches = contents.match(rx), i, len = matches && matches.length || 0;
         for (i = 0; i < len; i += 1) {
             matches[i] = matches[i].split(',').shift();// only get the first match in a statement.
@@ -139,6 +147,7 @@ module.exports = function (grunt) {
      * @returns []
      */
     function filter(paths, packages, wrap) {
+        //grunt.log.writeln('WHOIS', paths)
         paths = paths || [];
         var result = [], i, dependencies = {}, len = paths.length;
         paths = grunt.file.expand(paths);
@@ -148,11 +157,10 @@ module.exports = function (grunt) {
         }
         for (i in dependencies) {
             if (dependencies.hasOwnProperty(i)) {
-                grunt.log.writeln("\t" + dependencies[i].green);
+                //grunt.log.writeln("\t" + dependencies[i].green);
                 result.push(dependencies[i]);
             }
         }
-        grunt.log.writeln('WHOIS', result)
         return result;
     }
 
@@ -161,7 +169,8 @@ module.exports = function (grunt) {
 
         contents = grunt.file.read(path);
         contents = removeComments(contents);
-        rx = new RegExp('((' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?|(append|internal|define)([\\W\\s]+(("|\')[\\w|\\.]+))+)', 'gim');
+        //grunt.log.writeln(contents);
+        rx = new RegExp('((' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?|(internal|define)([\\W\\s]+(("|\')[\\w|\\.]+))+)', 'gim');
         keys = contents.match(rx);
         len = keys && keys.length || 0;
         cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
@@ -222,7 +231,7 @@ module.exports = function (grunt) {
     }
 
     function writeFiles(dest, files, options, target) {
-        grunt.log.writeln("output", dest.blue);
+        //grunt.log.writeln("output", dest.blue);
         if (options.wrap) {
             var buildFiles = {};
             buildFiles[dest] = files;
@@ -272,11 +281,11 @@ module.exports = function (grunt) {
 
         // we build the whole package structure. We will filter it out later.
         packages = buildPackages(this.files);
-        grunt.log.writeln("including:");
+        //grunt.log.writeln("including:");
         files = filter(options.inspect, packages, options.wrap);
         // generate file.
         //grunt.log.writeln(files);
-        writeSources(files, 'tmp/hb.js');
-        writeFiles(this.files[0].dest, ['tmp/hb.js'], options, target);
+        writeSources(files, '.tmp/treeshake.js');
+        writeFiles(this.files[0].dest, ['.tmp/treeshake.js'], options, target);
     });
 };
