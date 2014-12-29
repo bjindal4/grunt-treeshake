@@ -1,10 +1,8 @@
 'use strict';
 module.exports = function (grunt) {
-    grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
 
-    var options,
-        header = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/header.js'),
+    var header = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/header.js'),
         footer = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/footer.js'),
         cleanReservedWords = new RegExp('(import|append|internal|define)', 'gi'),
         everythingElse = /[^\*\.\w\d]/g;
@@ -123,7 +121,7 @@ module.exports = function (grunt) {
             for (j = 0; j < len; j += 1) {
                 path = files[i].src[j];
                 names = getFileNameFromContents(path);
-                while(names && names.length) {
+                while (names && names.length) {
                     name = names.shift();
                     packages[name] = path;
                     //grunt.log.writeln((name + '').red);
@@ -141,6 +139,7 @@ module.exports = function (grunt) {
      * @returns []
      */
     function filter(paths, packages, wrap) {
+        paths = paths || [];
         var result = [], i, dependencies = {}, len = paths.length;
         paths = grunt.file.expand(paths);
         for (i = 0; i < len; i += 1) {
@@ -153,19 +152,20 @@ module.exports = function (grunt) {
                 result.push(dependencies[i]);
             }
         }
+        grunt.log.writeln('WHOIS', result)
         return result;
     }
 
     function findDependencies(path, packages, dependencies, wrap) {
-        var contents = grunt.file.read(path);
-        contents = removeComments(contents);
-        var i, len, match, j, names,
-        //rx = new RegExp('(' + wrap + '\\.\\w+|(define|require)([\\W\\s]+(("|\')[\\w|\\.]+))+)', 'gim'),
+        var contents, i, len, match, j, names, rx, keys, len, cleanWrap, split;
 
-            rx = new RegExp('((' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?|(append|internal|define)([\\W\\s]+(("|\')[\\w|\\.]+))+)', 'gim'),
-            keys = contents.match(rx), split,
-            len = keys && keys.length || 0,
-            cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
+        contents = grunt.file.read(path);
+        contents = removeComments(contents);
+        rx = new RegExp('((' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?|(append|internal|define)([\\W\\s]+(("|\')[\\w|\\.]+))+)', 'gim');
+        keys = contents.match(rx);
+        len = keys && keys.length || 0;
+        cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
+
         // now we need to clean up the keys.
         //grunt.log.writeln("rx", rx);
         //grunt.log.writeln("keys", keys);
@@ -194,11 +194,11 @@ module.exports = function (grunt) {
                 } else if (keys[i] && keys[i].indexOf('*') !== -1) {
                     var wild = keys[i].substr(0, keys[i].length - 1).split('.').join('/');
                     //grunt.log.writeln("wildcard", keys[i].red, wild);
-                    for(j in packages) {
+                    for (j in packages) {
                         if (packages[j].indexOf(wild) !== -1) {
                             //grunt.log.writeln("\t*", wild.yellow, packages[j].green);
                             names = getFileNameFromContents(packages[j]);
-                            while(names && names.length) {
+                            while (names && names.length) {
                                 dependencies[names.shift()] = packages[i];
                                 findDependencies(packages[j], packages, dependencies, wrap);
                             }
@@ -265,22 +265,15 @@ module.exports = function (grunt) {
         var target = this.target,
             packages,
             files;
-        // Merge task-specific and/or target-specific options with these defaults.
-        options = {
-            wrap: '',
-            minify: false,
-            polymers: [],
-            ignores: []
-        };
-        for (var i in this.data.options) {
-            if (this.data.options.hasOwnProperty(i)) {
-                options[i] = this.data.options[i];
-            }
-        }
+
+        var options = this.options({
+            wrap: this.target
+        });
+
         // we build the whole package structure. We will filter it out later.
         packages = buildPackages(this.files);
         grunt.log.writeln("including:");
-        files = filter(this.data.build, packages, options.wrap);
+        files = filter(options.inspect, packages, options.wrap);
         // generate file.
         //grunt.log.writeln(files);
         writeSources(files, 'tmp/hb.js');
