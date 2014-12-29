@@ -8,6 +8,7 @@ module.exports = function (grunt) {
             demo: {
                 options: {
                     wrap: 'demo',
+                    minify: true,
                     inspect: ['example/app.js']
                 },
                 files: {
