@@ -107,6 +107,12 @@ There may be times when you want to include a definition but it is not reference
 	  ** import demo.someOtherMethod
 	  **/
 
+**Global imports using wildcard**
+
+Treeshake supports wildcard imports. The wildcard will import all files in the directory and its subdirectories regardless of whether a reference is found in the target files.
+
+	//! import demo.utils.*
+
 ###Preventing method from showing on namespace
 
 You may have some definitions that are "extensions" of another definition and do not need to be included on the namespace's API. To hide a definition, use **internal** in place of **define**.
@@ -120,4 +126,4 @@ It can only be referenced by other **define** or **internal** functions.
 	define('myDef', ['myPrivateMethod'], function(myPrivateMethod) {...})	
 ###Using Treeshake with Hummingbird
 
-Hummingbird is a micro framework that works similarly to AngularJS. In addition to the framework, hummingbird has several common utility libraries that can be via Treeshake. For more information go to [https://github.com/obogo/hummingbird]().
+Hummingbird is a micro framework that works similarly to AngularJS. In addition to the framework, hummingbird has several common utility libraries that can be imported via grunt-treeshake. For more information go to [https://github.com/obogo/hummingbird]().
