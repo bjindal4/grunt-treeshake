@@ -19,22 +19,31 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 
 ###Grunt options
 
+####inspect
+
+**Type:** Array
+
+**Default:** *undefined*
+
+The initial files to inspect for references to definitions. If inspect is undefined, all library files will be imported into build. **(currently in development)**
+
 ####wrap
 
 **Type:** String
 
-**Default:** undefined
+**Default:** Uses the grunt target name
 
-Wrap all of the code in a closure, an easy way to make sure nothing is leaking. For variables that need to be public exports and global variables are made available. A namespace for the wrap shall provide access to the API.
+Wraps all of the code in a closure, an easy way to make sure nothing is leaking. For variables that need to be public exports and global variables are made available. The value of wrap is the global variable exports will be available as.
+
 
 **Example**
 
 	treeshake: {
-            test: {
+            demo: {
                 options: {
-                    wrap: 'demo'
+                    wrap: 'myDemo',
+                    inspect: ['demo/*.js']
                 },
-                build: ['demo/*.js'], // reference to build files
                 files: {
                     'demo/treeshaked_lib.js': ['src/**/*.js']
                 }
@@ -42,18 +51,18 @@ Wrap all of the code in a closure, an easy way to make sure nothing is leaking. 
         }
 
 
-###How to use
+###Setting up JavaScript files
 
-To have your JavaScript libraries support tree shaking, each function should be wrapped in a CommonJS-like structure. It is best practice to have one definition per file.
+To have your JavaScript libraries support treeshaking, each function should be wrapped in a CommonJS-like structure. It is best practice to have one definition per file.
 
 	define('myMethod', function() {
 		return function() {
 			console.log('myMethod called');		}
 	});
 
-The define function expects that you will return a value. The value can be anything. Typically it will return either a function or object but can represent anything even primitive values such as a Boolean, String, Number, or Array.
+The *define* function expects that you will return a value. Typically, it will return either a function or object.
 
-Definitions can be referenced by other definitions like so:
+Definitions can be referenced by other definitions:
 
 	define('anotherMethod', ['myMethod'], function(myMethod) { ... });
 
@@ -68,7 +77,7 @@ Treeshake will find "demo.anotherMethod" *and* "demo.myMethod" and include them 
 
 	demo.anotherMethod();
 
-Treeshake will also find these variations
+Treeshake will also find these variations **(currently in development)**
 
 	demo['anotherMethod']();  // single quote reference
 	
@@ -112,5 +121,3 @@ It can only be referenced by other **define** or **internal** functions.
 ###Using Treeshake with Hummingbird
 
 Hummingbird is a micro framework that works similarly to AngularJS. In addition to the framework, hummingbird has several common utility libraries that can be via Treeshake. For more information go to [https://github.com/obogo/hummingbird]().
-
-		
