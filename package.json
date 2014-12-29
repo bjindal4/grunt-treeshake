@@ -1,7 +1,7 @@
 {
   "name": "grunt-treeshake",
   "description": "Imports and compiles only the JavaScript files referenced in a project",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "homepage": "https://github.com/obogo/grunt-treeshake",
   "author": {
     "name": "Obogo Team",
@@ -29,14 +29,14 @@
   "dependencies": {},
   "devDependencies": {
     "grunt": "^0.4.2",
-    "grunt-contrib-clean": "^0.6.0",
     "grunt-contrib-internal": "^0.4.2",
     "grunt-contrib-jshint": "^0.10.0",
-    "grunt-contrib-nodeunit": "^0.4.0",
-    "grunt-contrib-uglify": "^0.7.0"
+    "grunt-contrib-nodeunit": "^0.4.0"
   },
   "peerDependencies": {
-    "grunt": "~0.4.0"
+    "grunt": "~0.4.0",
+    "grunt-contrib-clean": "^0.6.0",
+    "grunt-contrib-uglify": "^0.7.0"
   },
   "keywords": [
     "gruntplugin"
