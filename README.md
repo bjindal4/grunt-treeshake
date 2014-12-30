@@ -136,7 +136,7 @@ There may be times when you want to include a definition that is not referenced 
 	  ** import demo.someOtherMethod
 	  **/
 
-**Global imports using wildcard**
+**Imports using wildcard**
 
 Treeshake supports wildcard imports. The wildcard will import all files in the directory and its subdirectories regardless of whether a reference is found in the target files.
 
