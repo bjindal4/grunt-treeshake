@@ -21,13 +21,24 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 
 ###Grunt options
 
+####imports
+
+**Type:** Array or String
+
+**Default:** *undefined*
+
+There may be times when you want to include a definition that is not referenced in one of supported formats. This option will allow you to include a file or files if using a wildcard whether referenced in source files or not. 
+
+	options: {
+		imports: ["utils.validators.*", "utils.ajax.http"]	}
+
 ####inspect
 
 **Type:** Array
 
 **Default:** *undefined*
 
-The initial files to inspect for references to definitions. If inspect is undefined, all library files will be imported into build. **(currently in development)**
+Your applications source files to know what to import into the build. Treeshake will inspect your source and look for references that match any definitions in the treeshake library files.
 
 ####minify
 
@@ -36,6 +47,14 @@ The initial files to inspect for references to definitions. If inspect is undefi
 **Default:** false
 
 Generates a minified version of you build in addition to an unminified version.
+
+####report
+
+**Type:** Enum (true, false, "verbose")
+
+**Default:** false
+
+If *true*, will report what files were included in build. If "verbose", will report what is included (with file and line number) and excluded.
 
 ####wrap
 
@@ -87,7 +106,7 @@ Treeshake will find "demo.anotherMethod" *and* "demo.myMethod" and include them 
 
 	demo.anotherMethod();
 
-Treeshake will also find these variations **(currently in development)**
+Treeshake will also find these variations
 
 	demo['anotherMethod']();  // single quote reference
 	
@@ -99,7 +118,7 @@ Treeshake will also find these variations **(currently in development)**
 	var d = demo;
 	d.anotherMethod();
 	
-###Comment reference to definitions
+###Imports using comments
 
 There may be times when you want to include a definition that is not referenced in one of supported formats. You can include a definition using the import declaration in a comment. 
 
@@ -117,7 +136,7 @@ There may be times when you want to include a definition that is not referenced 
 	  ** import demo.someOtherMethod
 	  **/
 
-**Global imports using wildcard**
+**Imports using wildcard**
 
 Treeshake supports wildcard imports. The wildcard will import all files in the directory and its subdirectories regardless of whether a reference is found in the target files.
 
