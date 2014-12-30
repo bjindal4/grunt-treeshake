@@ -167,9 +167,16 @@ module.exports = function (grunt) {
      * @returns []
      */
     function filter(paths, packages, wrap, options) {
-        printReport("including:");
         paths = paths || [];
         var result = [], i, dependencies = {}, len = paths.length;
+
+        // if they provide imports. We need to add them.
+        if (options.import) {
+            // populates those on dependencies.
+            findKeys(options.import, packages, dependencies, wrap, options);
+        }
+
+        printReport("including:");
         paths = grunt.file.expand(paths);
         for (i = 0; i < len; i += 1) {
             //print.apply(options, [paths[i]]);
@@ -213,30 +220,34 @@ module.exports = function (grunt) {
         }
         //print("keys", keys);
         if (keys) {
-            len = keys.length;
-            for (i = 0; i < len; i += 1) {
-                match = packages[keys[i]];
-                if (match && !dependencies[keys[i]]) {
-                    dependencies[keys[i]] = match;
-                    //print("find dependencies in", match);
-                    findDependencies(match, packages, dependencies, wrap, options);
-                } else if (keys[i] && keys[i].indexOf('*') !== -1) {
-                    var wild = keys[i].substr(0, keys[i].length - 1).split('.').join('/');
-                    //print("wildcard", keys[i].red, wild);
-                    for (j in packages) {
-                        if (packages[j].indexOf(wild) !== -1) {
-                            //print("\t*", wild.yellow, packages[j].green);
-                            names = getFileNameFromContents(packages[j]);
-                            while (names && names.length) {
-                                dependencies[names.shift()] = packages[i];
-                                findDependencies(packages[j], packages, dependencies, wrap, options);
-                            }
+            findKeys(keys, packages, dependencies, wrap, options);
+            //print(JSON.stringify(dependencies, null, 2));
+            return dependencies;// dependencies
+        }
+    }
+
+    function findKeys(keys, packages, dependencies, wrap, options) {
+        var len = keys.length, match, i, names, j;
+        for (i = 0; i < len; i += 1) {
+            match = packages[keys[i]];
+            if (match && !dependencies[keys[i]]) {
+                dependencies[keys[i]] = match;
+                //print("find dependencies in", match);
+                findDependencies(match, packages, dependencies, wrap, options);
+            } else if (keys[i] && keys[i].indexOf('*') !== -1) {
+                var wild = keys[i].substr(0, keys[i].length - 1).split('.').join('/');
+                //print("wildcard", keys[i].red, wild);
+                for (j in packages) {
+                    if (packages[j].indexOf(wild) !== -1) {
+                        //print("\t*", wild.yellow, packages[j].green);
+                        names = getFileNameFromContents(packages[j]);
+                        while (names && names.length) {
+                            dependencies[names.shift()] = packages[i];
+                            findDependencies(packages[j], packages, dependencies, wrap, options);
                         }
                     }
                 }
             }
-            //print(JSON.stringify(dependencies, null, 2));
-            return dependencies;// dependencies
         }
     }
 

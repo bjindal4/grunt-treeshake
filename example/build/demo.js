@@ -51,6 +51,17 @@
         }
         delete $$pending[name];
     };
+    define("http", function() {
+        return function() {
+            return "http";
+        };
+    });
+    internal("http.jsonp", [ "http" ], function(http) {
+        return http.jsonp = function() {
+            console.log("calling ", http());
+            return "http.jsonp";
+        };
+    });
     define("each", function() {
         return function() {
             return "each";
@@ -66,17 +77,6 @@
     define("isDefined", function() {
         return function(val) {
             return typeof val !== "undefined";
-        };
-    });
-    internal("http.jsonp", [ "http" ], function(http) {
-        return http.jsonp = function() {
-            console.log("calling ", http());
-            return "http.jsonp";
-        };
-    });
-    define("http", function() {
-        return function() {
-            return "http";
         };
     });
     for (var name in $$cache) {

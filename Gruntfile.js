@@ -8,7 +8,9 @@ module.exports = function (grunt) {
                 options: {
                     wrap: 'demo',
                     minify: true,
-                    inspect: ['example/app.js']
+                    inspect: ['example/app.js'],
+                    import: ['ajax.*'],
+                    report: true
                 },
                 files: {
                     'example/build/demo.js': ['example/lib/**/**.js']
