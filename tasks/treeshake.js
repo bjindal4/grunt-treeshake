@@ -14,11 +14,9 @@ module.exports = function (grunt) {
     everythingElse = /[^\*\.\w\d]/g;
 
     if (grunt.file.exists('./node_modules/grunt-treeshake/tasks/lib/header.js')) {
-        print('WE ARE HERE #1')
         header = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/header.js');
         footer = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/footer.js');
     } else {
-        print('WE ARE HERE #2')
         header = grunt.file.read('./tasks/lib/header.js');
         footer = grunt.file.read('./tasks/lib/footer.js');
     }
