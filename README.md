@@ -27,6 +27,14 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 
 The initial files to inspect for references to definitions. If inspect is undefined, all library files will be imported into build. **(currently in development)**
 
+####minify
+
+**Type:** Boolean
+
+**Default:** false
+
+Generates a minified version of you build in addition to an unminified version.
+
 ####wrap
 
 **Type:** String
@@ -95,7 +103,7 @@ There may be times when you want to include a definition but it is not reference
 
 **Note:** *Use ! to inform treeshake to look in the comment*
 
-	//! demo.myMethod
+	//! import demo.myMethod
 	
 	/*!
 	 * import demo.myMethod
@@ -127,3 +135,12 @@ It can only be referenced by other **define** or **internal** functions.
 ###Using Treeshake with Hummingbird
 
 Hummingbird is a micro framework that works similarly to AngularJS. In addition to the framework, hummingbird has several common utility libraries that can be imported via grunt-treeshake. For more information go to [https://github.com/obogo/hummingbird]().
+
+## Contributing
+grunt-treeshake is maintained by the following developers:
+
+* Rob Taylor <roboncode@gmail.com>
+* Wes Jones <cybus10@gmail.com>
+
+## License
+Copyright (c) 2014 Obogo. Licensed under the MIT license.
