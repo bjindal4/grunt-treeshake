@@ -1,10 +1,21 @@
 'use strict';
 module.exports = function (grunt) {
 
-    var print = function () {
-        var args = Array.prototype.slice.call(arguments);
-        //grunt.log.writeln.apply(grunt.log, args);
-    };
+    var printOptions = {report: false},
+        print = function () {
+            var args = Array.prototype.slice.call(arguments);
+            grunt.log.writeln.apply(grunt.log, args);
+        },
+        printReport = function () {
+            if (printOptions.report) {
+                print.apply(this, arguments);
+            }
+        },
+        printVerbose = function() {
+            if(printOptions.report === 'verbose') {
+                print.apply(this, arguments);
+            }
+        };
 
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-clean');
@@ -14,11 +25,9 @@ module.exports = function (grunt) {
     everythingElse = /[^\*\.\w\d]/g;
 
     if (grunt.file.exists('./node_modules/grunt-treeshake/tasks/lib/header.js')) {
-        print('WE ARE HERE #1')
         header = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/header.js');
         footer = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/footer.js');
     } else {
-        print('WE ARE HERE #2')
         header = grunt.file.read('./tasks/lib/header.js');
         footer = grunt.file.read('./tasks/lib/footer.js');
     }
@@ -131,6 +140,7 @@ module.exports = function (grunt) {
      * @returns {{}}
      */
     function buildPackages(files) {
+        printVerbose('Packages'.grey);
         var packages = {}, len, j, path, names, name;
         for (var i in files) {
             len = files[i].src.length;
@@ -140,7 +150,7 @@ module.exports = function (grunt) {
                 while (names && names.length) {
                     name = names.shift();
                     packages[name] = path;
-                    print((name + '').red);
+                    printVerbose("\t" + (name + '').grey);
                 }
             }
         }
@@ -152,41 +162,42 @@ module.exports = function (grunt) {
      * as long as there is no dependency reference.
      * @param {Array} paths
      * @param {Object} packages
+     * @param {String} wrap
+     * @param {Object} reporting
      * @returns []
      */
-    function filter(paths, packages, wrap) {
-        print('WHOIS', paths)
+    function filter(paths, packages, wrap, options) {
+        printReport("including:");
         paths = paths || [];
         var result = [], i, dependencies = {}, len = paths.length;
         paths = grunt.file.expand(paths);
-        print('whois2', paths);
         for (i = 0; i < len; i += 1) {
-            print(paths[i]);
-            findDependencies(paths[i], packages, dependencies, wrap);
+            //print.apply(options, [paths[i]]);
+            findDependencies(paths[i], packages, dependencies, wrap, options);
         }
         for (i in dependencies) {
             if (dependencies.hasOwnProperty(i)) {
-                print("\t" + dependencies[i].green);
+                printReport("\t" + dependencies[i].green);
                 result.push(dependencies[i]);
             }
         }
         return result;
     }
 
-    function findDependencies(path, packages, dependencies, wrap) {
+    function findDependencies(path, packages, dependencies, wrap, options) {
         var contents, i, len, match, j, names, rx, keys, len, cleanWrap, split;
 
         contents = grunt.file.read(path);
         contents = removeComments(contents);
-        print(contents);
+        //print(contents);
         rx = new RegExp('((' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?|(internal|define)([\\W\\s]+(("|\')[\\w|\\.]+))+)', 'gim');
         keys = contents.match(rx);
         len = keys && keys.length || 0;
         cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
 
         // now we need to clean up the keys.
-        print("rx", rx);
-        print("keys", keys);
+        //print("rx", rx);
+        //print("keys", keys);
         for (i = 0; i < len; i += 1) {
             if (keys[i].indexOf(',') !== -1) {
                 split = keys[i].split(',');
@@ -196,42 +207,51 @@ module.exports = function (grunt) {
                 //keys[i] = keys[i].split('.').pop();
                 keys[i] = keys[i].replace(cleanWrap, '');
                 keys[i] = keys[i].replace(cleanReservedWords, '');
-                print("keys", keys);
                 keys[i] = keys[i].replace(everythingElse, '');
+                //print.apply(options, ["keys", keys]);
             }
         }
-        print("keys", keys);
+        //print("keys", keys);
         if (keys) {
             len = keys.length;
             for (i = 0; i < len; i += 1) {
                 match = packages[keys[i]];
                 if (match && !dependencies[keys[i]]) {
                     dependencies[keys[i]] = match;
-                    print("find dependencies in", match);
-                    findDependencies(match, packages, dependencies, wrap);
+                    //print("find dependencies in", match);
+                    findDependencies(match, packages, dependencies, wrap, options);
                 } else if (keys[i] && keys[i].indexOf('*') !== -1) {
                     var wild = keys[i].substr(0, keys[i].length - 1).split('.').join('/');
-                    print("wildcard", keys[i].red, wild);
+                    //print("wildcard", keys[i].red, wild);
                     for (j in packages) {
                         if (packages[j].indexOf(wild) !== -1) {
-                            print("\t*", wild.yellow, packages[j].green);
+                            //print("\t*", wild.yellow, packages[j].green);
                             names = getFileNameFromContents(packages[j]);
                             while (names && names.length) {
                                 dependencies[names.shift()] = packages[i];
-                                findDependencies(packages[j], packages, dependencies, wrap);
+                                findDependencies(packages[j], packages, dependencies, wrap, options);
                             }
                         }
                     }
                 }
             }
-            print(JSON.stringify(dependencies, null, 2));
+            //print(JSON.stringify(dependencies, null, 2));
             return dependencies;// dependencies
+        }
+    }
+
+    function printExclusions(files, packages) {
+        print("excluded:");
+        for(var i in packages) {
+            if (packages.hasOwnProperty(i) && files.indexOf(packages[i]) === -1) {
+                print("\t" + packages[i].grey);
+            }
         }
     }
 
     function writeSources(files, dest) {
         // first we put our header on there for define and require.
-        var str = header, i = 0, len = files.length;
+        var str = header, i, len = files.length;
         for (i = 0; i < len; i += 1) {
             str += grunt.file.read(files[i]);
         }
@@ -240,7 +260,7 @@ module.exports = function (grunt) {
     }
 
     function writeFiles(dest, files, options, target) {
-        print("output", dest.blue);
+        print("writing", dest.blue);
         if (options.wrap) {
             var buildFiles = {};
             buildFiles[dest] = files;
@@ -291,13 +311,16 @@ module.exports = function (grunt) {
         var options = this.options({
             wrap: this.target
         });
+        printOptions.report = options.report;
 
         // we build the whole package structure. We will filter it out later.
         packages = buildPackages(this.files);
-        print("including:");
-        files = filter(options.inspect, packages, options.wrap);
+        files = filter(options.inspect, packages, options.wrap, options);
+        if (options.report === 'verbose') {
+            printExclusions(files, packages);
+        }
         // generate file.
-        print(files);
+        //print.apply(options, [files]);
         writeSources(files, '.tmp/treeshake.js');
         writeFiles(this.files[0].dest, ['.tmp/treeshake.js'], options, target);
     });
