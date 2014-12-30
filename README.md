@@ -5,6 +5,8 @@ A grunt task used to import and compile JavaScript files referenced in your proj
 
 The grunt-treeshake task uses a CommonJS-like syntax to define files, allowing treeshake to import only the files referenced into the build file. At runtime, the build file will initialize synchronously providing a public API to library.
 
+For examples and documentation, visit [https://github.com/obogo/grunt-treeshake](https://github.com/obogo/grunt-treeshake).
+
 ###Getting started
 
 This plugin requires Grunt ~0.4.0
@@ -99,7 +101,7 @@ Treeshake will also find these variations **(currently in development)**
 	
 ###Comment reference to definitions
 
-There may be times when you want to include a definition but it is not referenced in one of supported formats. You can include a definition by referencing it in a comment tag like so. 
+There may be times when you want to include a definition that is not referenced in one of supported formats. You can include a definition using the import declaration in a comment. 
 
 **Note:** *Use ! to inform treeshake to look in the comment*
 
@@ -121,7 +123,7 @@ Treeshake supports wildcard imports. The wildcard will import all files in the d
 
 	//! import demo.utils.*
 
-###Preventing method from showing on namespace
+###Creating private definitions
 
 You may have some definitions that are "extensions" of another definition and do not need to be included on the namespace's API. To hide a definition, use **internal** in place of **define**.
 
