@@ -1,0 +1,3 @@
+define('each', function() {
+
+});

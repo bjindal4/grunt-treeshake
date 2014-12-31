@@ -45,6 +45,18 @@ There may be times when you want to include a definition that is not referenced 
 		import: ["utils.validators.*", "utils.ajax.http"]
 	}
 
+####ignore
+
+**Type:** Array of definitions or Definition String
+
+**Default:** *undefined*
+
+There may be times when you want to exclude a definition that is referenced in one of supported formats. This could be due to having a base file and it filtering what is
+
+	options: {
+		import: ["utils.validators.*", "utils.ajax.http"]
+	}
+
 ####inspect
 
 **Type:** Array of files

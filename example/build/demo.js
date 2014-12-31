@@ -65,11 +65,6 @@
             return "http.jsonp";
         };
     });
-    define("each", function() {
-        return function() {
-            return "each";
-        };
-    });
     define("extend", [ "isDefined" ], function(isDefined) {
         return function() {
             var result = isDefined();

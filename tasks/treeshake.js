@@ -177,36 +177,47 @@ module.exports = function (grunt) {
         return packages;
     }
 
+    function filterHash(dependencies, paths, packages, wrap, options) {
+        paths = paths || [];
+        var i, len = paths.length;
+        dependencies = dependencies || {};
+        paths = grunt.file.expand(paths);
+        for (i = 0; i < len; i += 1) {
+            //print.apply(options, [paths[i]]);
+            findDependencies(paths[i], packages, dependencies, wrap, options);
+        }
+        return dependencies;
+    }
+
     /**
      * Filter out any paths that do not exist in the packages
      * as long as there is no dependency reference.
      * @param {Array} paths
      * @param {Object} packages
      * @param {String} wrap
-     * @param {Object} reporting
+     * @param {Object} options
+     * @param {Array} ignored
      * @returns []
      */
-    function filter(paths, packages, wrap, options) {
+    function filter(paths, packages, wrap, options, ignored) {
         paths = paths || [];
-        var result = [], i, dependencies = {}, len = paths.length;
-
+        var result = [], i, dependencies = {};
         // if they provide imports. We need to add them.
         if (options.import) {
             // populates those on dependencies.
             findKeys(options.import, packages, dependencies, wrap, options);
         }
-
+        filterHash(dependencies, paths, packages, wrap, options);
         printReport("Included:");
-        paths = grunt.file.expand(paths);
-        for (i = 0; i < len; i += 1) {
-            //print.apply(options, [paths[i]]);
-            findDependencies(paths[i], packages, dependencies, wrap, options);
-        }
         for (i in dependencies) {
             if (dependencies.hasOwnProperty(i)) {
-                printFileLine(dependencies[i], 'green');
+                if (ignored && ignored.hasOwnProperty(i)) {
+                    ignored[i].ignoreCount = (ignored[i].ignoreCount || 0) + 1;
+                } else {
+                    result.push(dependencies[i]);
+                    printFileLine(dependencies[i], 'green');
+                }
                 //printReport("\t" + dependencies[i].green);
-                result.push(dependencies[i]);
             }
         }
         return result;
@@ -299,15 +310,27 @@ module.exports = function (grunt) {
         }
     }
 
-    function printExclusions(files, packages) {
+    function printIgnores(ignored) {
+        var i;
+        if (ignored) {
+            for (i in ignored) {
+                if (ignored[i].ignoreCount) {
+                    printFileLine(ignored[i], 'grey');
+                }
+            }
+        }
+    }
+
+    function printExclusions(files, packages, ignored) {
         print("Excluded:".grey);
+        printIgnores(ignored);
         var len = files.length, i, j, found;
         for (i in packages) {
             if (packages.hasOwnProperty(i)) {
-                found = false;
+                found = null;
                 for(j = 0; j < len; j += 1) {
-                    if (files[j].src === packages[i]) {
-                        found = true;
+                    if ((ignored && ignored[i]) || files[j].src === packages[i]) {
+                        found = files[j];
                         break;
                     }
                 }
@@ -377,7 +400,8 @@ module.exports = function (grunt) {
     grunt.registerMultiTask('treeshake', 'Optimize files added', function () {
         var target = this.target,
             packages,
-            files;
+            files,
+            ignored;
 
         var options = this.options({
             wrap: this.target,
@@ -390,9 +414,10 @@ module.exports = function (grunt) {
 
         // we build the whole package structure. We will filter it out later.
         packages = buildPackages(this.files);
-        files = filter(options.inspect, packages, options.wrap, options);
+        ignored = filterHash({}, options.ignore, packages, options.wrap, options);
+        files = filter(options.inspect, packages, options.wrap, options, ignored);
         if (options.report === 'verbose') {
-            printExclusions(files, packages);
+            printExclusions(files, packages, ignored);
         }
         // generate file.
         //print.apply(options, [files]);
