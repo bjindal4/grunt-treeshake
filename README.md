@@ -21,20 +21,31 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 
 ###Grunt options
 
-####imports
+####ignore
 
-**Type:** Array or String
+**Type:** Array of files
+
+**Default:** *undefined*
+
+Will exclude importing definitions from files that have definitions already defined. This is useful if you have a base file that already has some definitions to prevent including the same definitions twice.
+
+	options: {
+		ignore: ["build/base.js"]	}
+
+####import
+
+**Type:** Array of definitions or Definition String
 
 **Default:** *undefined*
 
 There may be times when you want to include a definition that is not referenced in one of supported formats. This option will allow you to include a file or files if using a wildcard whether referenced in source files or not. 
 
 	options: {
-		imports: ["utils.validators.*", "utils.ajax.http"]	}
+		import: ["utils.validators.*", "utils.ajax.http"]	}
 
 ####inspect
 
-**Type:** Array
+**Type:** Array of files
 
 **Default:** *undefined*
 
