@@ -41,7 +41,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
 
     var header, footer, cleanReservedWords, everythingElse;
-    cleanReservedWords = new RegExp('(import|internal|define)', 'gi');
+    cleanReservedWords = new RegExp('\\b(import|internal|define)\\b', 'g');
     everythingElse = /[^\*\.\w\d]/g;
 
     if (grunt.file.exists('./node_modules/grunt-treeshake/tasks/lib/header.js')) {
@@ -160,7 +160,7 @@ module.exports = function (grunt) {
      * @returns {{}}
      */
     function buildPackages(files) {
-        printVerbose('Packages'.grey);
+        printVerbose('\nDefinitions:'.grey);
         var packages = {}, len, j, path, names, name;
         for (var i in files) {
             len = files[i].src.length;
@@ -208,7 +208,7 @@ module.exports = function (grunt) {
             findKeys(options.import, packages, dependencies, wrap, options);
         }
         filterHash(dependencies, paths, packages, wrap, options);
-        printReport("Included:");
+        printReport("\nIncluded:");
         for (i in dependencies) {
             if (dependencies.hasOwnProperty(i)) {
                 if (ignored && ignored.hasOwnProperty(i)) {
@@ -322,7 +322,7 @@ module.exports = function (grunt) {
     }
 
     function printExclusions(files, packages, ignored) {
-        print("Excluded:".grey);
+        print("\nIgnored:".grey);
         printIgnores(ignored);
         var len = files.length, i, j, found;
         for (i in packages) {
@@ -355,7 +355,7 @@ module.exports = function (grunt) {
     }
 
     function writeFiles(dest, files, options, target) {
-        print("wrote:", dest.blue);
+        print("\nOutput:\n\t" + dest.blue);
         if (options.wrap) {
             var buildFiles = {};
             buildFiles[dest] = files;
@@ -405,9 +405,7 @@ module.exports = function (grunt) {
 
         var options = this.options({
             wrap: this.target,
-            log: consoleStr,
-            clearLog: false,
-            logLimit: 10000
+            log: consoleStr
         });
         printOptions.report = options.report;
         printOptions.log = options.log;
@@ -425,13 +423,7 @@ module.exports = function (grunt) {
         writeFiles(this.files[0].dest, ['.tmp/treeshake.js'], options, target);
         if (printOptions.log !== consoleStr) {
             var content = '';
-            if(!options.clearLog) {
-                try {
-                    content = grunt.file.read(printOptions.log);
-                } catch (e) {}
-            }
             printStr = '------' + new Date().toLocaleString() + "------\n" + printStr + "\n" + content;
-            printStr = printStr.substr(0, options.logLimit);// cap the string length;
             grunt.file.write(printOptions.log, printStr);
         }
     });

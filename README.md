@@ -45,14 +45,6 @@ There may be times when you want to include a definition that is not referenced 
 		import: ["utils.validators.*", "utils.ajax.http"]
 	}
 
-####ignore
-
-**Type:** Array files
-
-**Default:** *undefined*
-
-This will look through these files and find any dependencies listed. Then ignore those. So for example if you wanted to have a base js file that had core functionality and then include a file later that was treeshaken as well, but you didn't want it to also include the base functionality then you would reference the base js file in the ignore and any dependencies already defined it would be ignored.
-
 ####inspect
 
 **Type:** Array of files
@@ -84,22 +76,6 @@ If *true*, will report what files were included in build. If "verbose", will rep
 **Default:** "console"
 
 If any string other than "console" is provided it will try to write to that location instead of logging to the console.
-
-####clearLog
-
-**Type:** Boolean
-
-**Default:** false
-
-If true then the log file will be cleared before writing every time. This only works with log being set to a file path.
-
-####logLimit
-
-**Type:** Int
-
-**Default:** 10,000
-
-This will limit the output to the log file and automatically truncate at "logLimit" number of characters. So this only works when "log" has a file path.
 
 ####wrap
 

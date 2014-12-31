@@ -1,0 +1,23 @@
+------Wed Dec 31 2014 13:12:23 GMT-0700 (MST)------
+
+Definitions: 
+	http 
+	http.jsonp 
+	each 
+	extend 
+	isDefined 
+	isNumber 
+
+Included: 
+	example/lib/ajax/http.js - Gruntfile.js:import ajax.* 
+	example/lib/ajax/jsonp.js - Gruntfile.js:import ajax.* 
+	example/lib/object/extend.js - Gruntfile.js:import object.* 
+	example/lib/validators/isDefined.js - example/lib/object/extend.js:4 
+
+Ignored: 
+	example/lib/object/each.js - example/ignore.js:2 
+	example/lib/validators/isNumber.js 
+
+Output:
+	example/build/demo.js 
+

@@ -11,8 +11,8 @@ module.exports = function (grunt) {
                     inspect: ['example/app.js'],
                     import: ['ajax.*'],
                     report: 'verbose',
-                    ignore: ['example/ignore.js']
-                    //log: 'example/build/demo.log',
+                    ignore: ['example/ignore.js'],
+                    log: 'example/build/demo.log',
                     //clearLog: false,
                     //logLimit: 500
                 },
