@@ -1,6 +1,6 @@
-var $$cache = {};
-var $$internals = {};
-var $$pending = {};
+var $$cache = exports.$$cache || {};
+var $$internals = exports.$$internals || {};
+var $$pending = exports.$$pending || {};
 
 var define = function (name) {
     var args = Array.prototype.slice.call(arguments);
@@ -54,6 +54,10 @@ var resolve = function (name, fn) {
             exports[name] = fn.apply(null, args);
         }
     }
+
+    exports.$$cache = $$cache;
+    exports.$$internals = $$internals;
+    exports.$$pending = $$pending;
 
     delete $$pending[name];
 };
