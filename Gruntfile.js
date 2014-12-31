@@ -10,7 +10,10 @@ module.exports = function (grunt) {
                     minify: true,
                     inspect: ['example/app.js'],
                     import: ['ajax.*'],
-                    report: true
+                    report: 'verbose',
+                    //log: 'example/build/demo.log',
+                    //clearLog: false,
+                    //logLimit: 500
                 },
                 files: {
                     'example/build/demo.js': ['example/lib/**/**.js']

@@ -30,7 +30,8 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 Will exclude importing definitions from files that have definitions already defined. This is useful if you have a base file that already has some definitions to prevent including the same definitions twice.
 
 	options: {
-		ignore: ["build/base.js"]	}
+		ignore: ["build/base.js"]
+	}
 
 ####import
 
@@ -41,7 +42,8 @@ Will exclude importing definitions from files that have definitions already defi
 There may be times when you want to include a definition that is not referenced in one of supported formats. This option will allow you to include a file or files if using a wildcard whether referenced in source files or not. 
 
 	options: {
-		import: ["utils.validators.*", "utils.ajax.http"]	}
+		import: ["utils.validators.*", "utils.ajax.http"]
+	}
 
 ####inspect
 
@@ -65,7 +67,31 @@ Generates a minified version of you build in addition to an unminified version.
 
 **Default:** false
 
-If *true*, will report what files were included in build. If "verbose", will report what is included (with file and line number) and excluded.
+If *true*, will report what files were included in build. If "verbose", will report the package structure, what is included (with file and line number), and excluded.
+
+####log
+
+**Type:** String
+
+**Default:** "console"
+
+If any string other than "console" is provided it will try to write to that location instead of logging to the console.
+
+####clearLog
+
+**Type:** Boolean
+
+**Default:** false
+
+If true then the log file will be cleared before writing every time. This only works with log being set to a file path.
+
+####logLimit
+
+**Type:** Int
+
+**Default:** 10,000
+
+This will limit the output to the log file and automatically truncate at "logLimit" number of characters. So this only works when "log" has a file path.
 
 ####wrap
 
@@ -97,7 +123,8 @@ To have your JavaScript libraries support treeshaking, each function should be w
 
 	define('myMethod', function() {
 		return function() {
-			console.log('myMethod called');		}
+			console.log('myMethod called');
+		}
 	});
 
 The *define* function expects that you will return a value. Typically, it will return either a function or object.
@@ -112,7 +139,8 @@ Once you grunt the definitions they will be available on a global namespace you 
 
 In your application you can reference the definitions in a couple different ways:
 
-###Referencing definitions 		
+###Referencing definitions
+ 		
 Treeshake will find "demo.anotherMethod" *and* "demo.myMethod" and include them in the build.
 
 	demo.anotherMethod();
@@ -163,7 +191,8 @@ It can only be referenced by other **define** or **internal** functions.
 
 	internal('myDef', ['myPrivateMethod'], function(myPrivateMethod) {...})
 		
-	define('myDef', ['myPrivateMethod'], function(myPrivateMethod) {...})	
+	define('myDef', ['myPrivateMethod'], function(myPrivateMethod) {...})
+	
 ###Using Treeshake with Hummingbird
 
 Hummingbird is a micro framework that works similarly to AngularJS. In addition to the framework, hummingbird has several common utility libraries that can be imported via grunt-treeshake. For more information go to [https://github.com/obogo/hummingbird]().

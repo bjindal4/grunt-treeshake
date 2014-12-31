@@ -8,10 +8,19 @@ module.exports = function (grunt) {
     return this;\n\
 }());';
 
-    var printOptions = {report: false},
+    var consoleStr = 'console',
+        printStr = '',
+        printOptions = {report: false},
         print = function () {
             var args = Array.prototype.slice.call(arguments);
-            grunt.log.writeln.apply(grunt.log, args);
+            if (printOptions.log === consoleStr) {
+                grunt.log.writeln.apply(grunt.log, args);
+            } else {
+                while (args.length) {
+                    printStr += grunt.log.uncolor(args.shift()) + " ";
+                }
+                printStr += "\n";
+            }
         },
         printReport = function () {
             if (printOptions.report) {
@@ -22,6 +31,10 @@ module.exports = function (grunt) {
             if (printOptions.report === 'verbose') {
                 print.apply(this, arguments);
             }
+        },
+        printFileLine = function(fileKey, color) {
+            var str = fileKey.src[color] + (' - ' + fileKey.from + ':' + (fileKey.line !== undefined ? fileKey.line : fileKey.type + ' ' + fileKey.value)).grey;
+            print.apply(this, ["\t" + str]);
         };
 
     grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -183,7 +196,7 @@ module.exports = function (grunt) {
             findKeys(options.import, packages, dependencies, wrap, options);
         }
 
-        printReport("including:");
+        printReport("Included:");
         paths = grunt.file.expand(paths);
         for (i = 0; i < len; i += 1) {
             //print.apply(options, [paths[i]]);
@@ -191,15 +204,27 @@ module.exports = function (grunt) {
         }
         for (i in dependencies) {
             if (dependencies.hasOwnProperty(i)) {
-                printReport("\t" + dependencies[i].green);
+                printFileLine(dependencies[i], 'green');
+                //printReport("\t" + dependencies[i].green);
                 result.push(dependencies[i]);
             }
         }
         return result;
     }
 
+    function getLineNumber(str, content) {
+        var parts = content.split(/(\n|\r)/g), i, len = parts.length, index;
+        for(i = 0; i < len; i += 1) {
+            index = parts[i].indexOf(str);
+            if (index !== -1) {
+                return {num:i + 2};
+            }
+        }
+        return '';
+    }
+
     function findDependencies(path, packages, dependencies, wrap, options) {
-        var contents, i, len, match, j, names, rx, keys, len, cleanWrap, split;
+        var contents, i, len, match, j, names, rx, keys, len, cleanWrap, split, line;
 
         contents = grunt.file.read(path);
         contents = removeComments(contents);
@@ -219,10 +244,12 @@ module.exports = function (grunt) {
                 len = keys.length;
             } else {
                 //keys[i] = keys[i].split('.').pop();
+                line = getLineNumber(keys[i], contents);
                 keys[i] = keys[i].replace(cleanWrap, '');
                 keys[i] = keys[i].replace(cleanReservedWords, '');
                 keys[i] = keys[i].replace(everythingElse, '');
                 //print.apply(options, ["keys", keys]);
+                keys[i] = {value:keys[i], line:line.num, char:line.char, from:path};
             }
         }
         //print("keys", keys);
@@ -234,23 +261,37 @@ module.exports = function (grunt) {
     }
 
     function findKeys(keys, packages, dependencies, wrap, options) {
-        var len = keys.length, match, i, names, j;
+        var len = keys.length, match, i, names, j, key, name;
         for (i = 0; i < len; i += 1) {
-            match = packages[keys[i]];
-            if (match && !dependencies[keys[i]]) {
-                dependencies[keys[i]] = match;
-                //print("find dependencies in", match);
-                findDependencies(match, packages, dependencies, wrap, options);
-            } else if (keys[i] && keys[i].indexOf('*') !== -1) {
-                var wild = keys[i].substr(0, keys[i].length - 1).split('.').join('/');
-                //print("wildcard", keys[i].red, wild);
-                for (j in packages) {
-                    if (packages[j].indexOf(wild) !== -1) {
-                        //print("\t*", wild.yellow, packages[j].green);
-                        names = getFileNameFromContents(packages[j]);
-                        while (names && names.length) {
-                            dependencies[names.shift()] = packages[i];
-                            findDependencies(packages[j], packages, dependencies, wrap, options);
+            key = keys[i];
+            if (key) {
+                if (!key.value) {
+                    key = keys[i] = {value:key + ''};
+                }
+                match = packages[key.value];
+                if (match && !dependencies[key.value]) {
+                    key.src = match;
+                    dependencies[key.value] = key;
+                    //print("find dependencies in", match);
+                    findDependencies(match, packages, dependencies, wrap, options);
+                } else if (key.value && key.value.indexOf && key.value.indexOf('*') !== -1) {
+                    // these will be strings not objects for keys.
+                    var wild = key.value.substr(0, key.value.length - 1).split('.').join('/');
+                    //print("wildcard", key.value.red, wild);
+                    for (j in packages) {
+                        if (packages[j].indexOf(wild) !== -1) {
+                            //print("\t*", wild.yellow, packages[j].green);
+                            names = getFileNameFromContents(packages[j]);
+                            while (names && names.length) {
+                                name = names.shift();
+                                dependencies[name] = {
+                                    src: packages[name],
+                                    from: 'Gruntfile.js',
+                                    type: 'import',
+                                    value: key.value
+                                };
+                                findDependencies(packages[j], packages, dependencies, wrap, options);
+                            }
                         }
                     }
                 }
@@ -259,10 +300,20 @@ module.exports = function (grunt) {
     }
 
     function printExclusions(files, packages) {
-        print("excluded:");
-        for (var i in packages) {
-            if (packages.hasOwnProperty(i) && files.indexOf(packages[i]) === -1) {
-                print("\t" + packages[i].grey);
+        print("Excluded:".grey);
+        var len = files.length, i, j, found;
+        for (i in packages) {
+            if (packages.hasOwnProperty(i)) {
+                found = false;
+                for(j = 0; j < len; j += 1) {
+                    if (files[j].src === packages[i]) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    print("\t" + packages[i].grey);
+                }
             }
         }
     }
@@ -271,7 +322,8 @@ module.exports = function (grunt) {
         // first we put our header on there for define and require.
         var str = header, i, len = files.length;
         for (i = 0; i < len; i += 1) {
-            str += grunt.file.read(files[i]);
+            str += '// ' + files[i].src + "\n";
+            str += grunt.file.read(files[i].src);
         }
         str += footer;
         str = str.split('{$$namespace}').join(wrap);
@@ -280,7 +332,7 @@ module.exports = function (grunt) {
     }
 
     function writeFiles(dest, files, options, target) {
-        print("writing", dest.blue);
+        print("wrote:", dest.blue);
         if (options.wrap) {
             var buildFiles = {};
             buildFiles[dest] = files;
@@ -294,8 +346,7 @@ module.exports = function (grunt) {
                     compress: false,
                     preserveComments: 'some',
                     beautify: true,
-                    exportAll: false,
-                    //wrap: options.wrap
+                    exportAll: false
                 },
                 files: buildFiles
             };
@@ -329,9 +380,13 @@ module.exports = function (grunt) {
             files;
 
         var options = this.options({
-            wrap: this.target
+            wrap: this.target,
+            log: consoleStr,
+            clearLog: false,
+            logLimit: 10000
         });
         printOptions.report = options.report;
+        printOptions.log = options.log;
 
         // we build the whole package structure. We will filter it out later.
         packages = buildPackages(this.files);
@@ -343,5 +398,16 @@ module.exports = function (grunt) {
         //print.apply(options, [files]);
         writeSources(options.wrap, files, '.tmp/treeshake.js');
         writeFiles(this.files[0].dest, ['.tmp/treeshake.js'], options, target);
+        if (printOptions.log !== consoleStr) {
+            var content = '';
+            if(!options.clearLog) {
+                try {
+                    content = grunt.file.read(printOptions.log);
+                } catch (e) {}
+            }
+            printStr = '------' + new Date().toLocaleString() + "------\n" + printStr + "\n" + content;
+            printStr = printStr.substr(0, options.logLimit);// cap the string length;
+            grunt.file.write(printOptions.log, printStr);
+        }
     });
 };
