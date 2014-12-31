@@ -1,8 +1,8 @@
 (function(exports, global) {
     global["demo"] = exports;
-    var $$cache = {};
-    var $$internals = {};
-    var $$pending = {};
+    var $$cache = exports.$$cache || {};
+    var $$internals = exports.$$internals || {};
+    var $$pending = exports.$$pending || {};
     var define = function(name) {
         var args = Array.prototype.slice.call(arguments);
         if (typeof args[1] === "function") {
@@ -49,6 +49,9 @@
                 exports[name] = fn.apply(null, args);
             }
         }
+        exports.$$cache = $$cache;
+        exports.$$internals = $$internals;
+        exports.$$pending = $$pending;
         delete $$pending[name];
     };
     define("http", function() {
@@ -82,6 +85,6 @@
     for (var name in $$cache) {
         resolve(name, $$cache[name]);
     }
-})({}, function() {
+})(this["demo"] || {}, function() {
     return this;
 }());

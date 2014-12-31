@@ -1,6 +1,13 @@
 'use strict';
 module.exports = function (grunt) {
 
+    var headerWrap = '(function(exports, global) {\n\
+    global["{$$namespace}"] = exports;\n';
+
+    var footerWrap = '\n})(this["{$$namespace}"] || {}, function() {\n\
+    return this;\n\
+}());';
+
     var printOptions = {report: false},
         print = function () {
             var args = Array.prototype.slice.call(arguments);
@@ -11,8 +18,8 @@ module.exports = function (grunt) {
                 print.apply(this, arguments);
             }
         },
-        printVerbose = function() {
-            if(printOptions.report === 'verbose') {
+        printVerbose = function () {
+            if (printOptions.report === 'verbose') {
                 print.apply(this, arguments);
             }
         };
@@ -25,11 +32,11 @@ module.exports = function (grunt) {
     everythingElse = /[^\*\.\w\d]/g;
 
     if (grunt.file.exists('./node_modules/grunt-treeshake/tasks/lib/header.js')) {
-        header = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/header.js');
-        footer = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/footer.js');
+        header = headerWrap + grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/header.js');
+        footer = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/footer.js') + footerWrap;
     } else {
-        header = grunt.file.read('./tasks/lib/header.js');
-        footer = grunt.file.read('./tasks/lib/footer.js');
+        header = headerWrap + grunt.file.read('./tasks/lib/header.js');
+        footer = grunt.file.read('./tasks/lib/footer.js') + footerWrap;
     }
 
     /**
@@ -253,20 +260,22 @@ module.exports = function (grunt) {
 
     function printExclusions(files, packages) {
         print("excluded:");
-        for(var i in packages) {
+        for (var i in packages) {
             if (packages.hasOwnProperty(i) && files.indexOf(packages[i]) === -1) {
                 print("\t" + packages[i].grey);
             }
         }
     }
 
-    function writeSources(files, dest) {
+    function writeSources(wrap, files, dest) {
         // first we put our header on there for define and require.
         var str = header, i, len = files.length;
         for (i = 0; i < len; i += 1) {
             str += grunt.file.read(files[i]);
         }
         str += footer;
+        str = str.split('{$$namespace}').join(wrap);
+
         grunt.file.write(dest, str);
     }
 
@@ -286,7 +295,7 @@ module.exports = function (grunt) {
                     preserveComments: 'some',
                     beautify: true,
                     exportAll: false,
-                    wrap: options.wrap
+                    //wrap: options.wrap
                 },
                 files: buildFiles
             };
@@ -332,7 +341,7 @@ module.exports = function (grunt) {
         }
         // generate file.
         //print.apply(options, [files]);
-        writeSources(files, '.tmp/treeshake.js');
+        writeSources(options.wrap, files, '.tmp/treeshake.js');
         writeFiles(this.files[0].dest, ['.tmp/treeshake.js'], options, target);
     });
 };
