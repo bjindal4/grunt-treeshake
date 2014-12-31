@@ -91,7 +91,7 @@ Wraps all of the code in a closure, an easy way to make sure nothing is leaking.
         }
 
 
-###Setting up JavaScript files
+###Treeshake setup
 
 To have your JavaScript libraries support treeshaking, each function should be wrapped in a CommonJS-like structure. It is best practice to have one definition per file.
 
@@ -112,7 +112,7 @@ Once you grunt the definitions they will be available on a global namespace you 
 
 In your application you can reference the definitions in a couple different ways:
 
-###Direct reference to definitions 		
+###Referencing definitions 		
 Treeshake will find "demo.anotherMethod" *and* "demo.myMethod" and include them in the build.
 
 	demo.anotherMethod();
@@ -129,7 +129,7 @@ Treeshake will also find these variations
 	var d = demo;
 	d.anotherMethod();
 	
-###Imports using comments
+###Import using comments
 
 There may be times when you want to include a definition that is not referenced in one of supported formats. You can include a definition using the import declaration in a comment. 
 
@@ -147,7 +147,7 @@ There may be times when you want to include a definition that is not referenced 
 	  ** import demo.someOtherMethod
 	  **/
 
-**Imports using wildcard**
+**Import using wildcard**
 
 Treeshake supports wildcard imports. The wildcard will import all files in the directory and its subdirectories regardless of whether a reference is found in the target files.
 
