@@ -51,7 +51,7 @@ There may be times when you want to include a definition that is not referenced 
 
 **Default:** *undefined*
 
-This will look through these files and find any dependencies listed. Then ignore those. So for example if you wanted to have a base js file that had core functionality and then include a file later that was treeshaken as well, but you didn't want it to also include the base functionality. Then you would reference the base js file in the ignore and any dependencies already defined it would ignore.
+This will look through these files and find any dependencies listed. Then ignore those. So for example if you wanted to have a base js file that had core functionality and then include a file later that was treeshaken as well, but you didn't want it to also include the base functionality then you would reference the base js file in the ignore and any dependencies already defined it would be ignored.
 
 ####inspect
 
