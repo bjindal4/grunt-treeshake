@@ -32,7 +32,7 @@ module.exports = function (grunt) {
                 print.apply(this, arguments);
             }
         },
-        printFileLine = function(fileKey, color) {
+        printFileLine = function (fileKey, color) {
             var str = fileKey.src[color] + (' - ' + fileKey.from + ':' + (fileKey.line !== undefined ? fileKey.line : fileKey.type + ' ' + fileKey.value)).grey;
             print.apply(this, ["\t" + str]);
         };
@@ -225,17 +225,49 @@ module.exports = function (grunt) {
 
     function getLineNumber(str, content) {
         var parts = content.split(/(\n|\r)/g), i, len = parts.length, index;
-        for(i = 0; i < len; i += 1) {
+        for (i = 0; i < len; i += 1) {
             index = parts[i].indexOf(str);
             if (index !== -1) {
-                return {num:i + 2};
+                return {num: i + 2};
             }
         }
         return '';
     }
 
+    function getRx(alias) {
+        return new RegExp('\\b' + alias + '(\\.\\w+|\\[("|\')\\w+\\2\\])+', 'gm');
+    }
+
+    function getAliasKeys(path, wrap) {
+        var contents = grunt.file.read(path), aliases = [], rx, keys = [], i, len, matches = [];
+        contents = removeComments(contents);
+        contents.replace(new RegExp('(\\w+)\\s?=\\s?' + wrap + ';', 'g'), function (match, g1) {
+            aliases.push(g1);
+            return match;
+        });
+
+        function handleMatch(match, g1, g2) {
+            var key, line;
+            if (g1.length > 1) {
+                line = getLineNumber(g1, contents);
+                key = {value: g1.substr(1, g1.length).replace(everythingElse, ''), line: line.num, from:path};
+                keys.push(key);
+            }
+            return match;
+        }
+
+        if (aliases && (len = aliases.length)) {
+            // we found aliases so we need to check for matches and add them to the keys.
+            for (i = 0; i < len; i += 1) {
+                rx = getRx(aliases[i]);
+                contents.replace(rx, handleMatch);
+            }
+        }
+        return keys;
+    }
+
     function findDependencies(path, packages, dependencies, wrap, options) {
-        var contents, i, len, match, j, names, rx, keys, len, cleanWrap, split, line;
+        var contents, i, len, rx, keys, len, cleanWrap, split, line;
 
         contents = grunt.file.read(path);
         contents = removeComments(contents);
@@ -244,23 +276,20 @@ module.exports = function (grunt) {
         keys = contents.match(rx);
         len = keys && keys.length || 0;
         cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
-
+        keys = keys.concat(getAliasKeys(path, wrap));
         // now we need to clean up the keys.
-        //print("rx", rx);
-        //print("keys", keys);
+        //grunt.log.writeln("keys", keys);
         for (i = 0; i < len; i += 1) {
             if (keys[i].indexOf(',') !== -1) {
                 split = keys[i].split(',');
                 keys = keys.concat(split);
                 len = keys.length;
             } else {
-                //keys[i] = keys[i].split('.').pop();
                 line = getLineNumber(keys[i], contents);
                 keys[i] = keys[i].replace(cleanWrap, '');
                 keys[i] = keys[i].replace(cleanReservedWords, '');
                 keys[i] = keys[i].replace(everythingElse, '');
-                //print.apply(options, ["keys", keys]);
-                keys[i] = {value:keys[i], line:line.num, char:line.char, from:path};
+                keys[i] = {value: keys[i], line: line.num, char: line.char, from: path};
             }
         }
         //print("keys", keys);
@@ -277,7 +306,7 @@ module.exports = function (grunt) {
             key = keys[i];
             if (key) {
                 if (!key.value) {
-                    key = keys[i] = {value:key + ''};
+                    key = keys[i] = {value: key + ''};
                 }
                 match = packages[key.value];
                 if (match && !dependencies[key.value]) {
@@ -328,7 +357,7 @@ module.exports = function (grunt) {
         for (i in packages) {
             if (packages.hasOwnProperty(i)) {
                 found = null;
-                for(j = 0; j < len; j += 1) {
+                for (j = 0; j < len; j += 1) {
                     if ((ignored && ignored[i]) || files[j].src === packages[i]) {
                         found = files[j];
                         break;

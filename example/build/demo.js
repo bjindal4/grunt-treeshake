@@ -77,6 +77,11 @@
             return typeof val !== "undefined";
         };
     });
+    define("isNumber", function() {
+        return function(val) {
+            return !isNaN(val);
+        };
+    });
     for (var name in $$cache) {
         resolve(name, $$cache[name]);
     }
