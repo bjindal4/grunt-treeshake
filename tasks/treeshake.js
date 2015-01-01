@@ -33,6 +33,7 @@ module.exports = function (grunt) {
             }
         },
         printFileLine = function (fileKey, color) {
+            fileKey.from = fileKey.from || 'Gruntfile.js';
             var str = fileKey.src[color] + (' - ' + fileKey.from + ':' + (fileKey.line !== undefined ? fileKey.line : fileKey.type + ' ' + fileKey.value)).grey;
             print.apply(this, ["\t" + str]);
         };
@@ -206,6 +207,11 @@ module.exports = function (grunt) {
         if (options.import) {
             // populates those on dependencies.
             findKeys(options.import, packages, dependencies, wrap, options);
+            for(i in dependencies) {
+                if (dependencies.hasOwnProperty(i)) {
+                    dependencies[i].type = 'import';
+                }
+            }
         }
         filterHash(dependencies, paths, packages, wrap, options);
         printReport("\nIncluded:");
