@@ -21,6 +21,18 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 
 ###Grunt options
 
+###aliases
+
+**Type:** Array of strings or String
+
+**Default:** ["define", "internal"]
+
+Expands the search to look beyond the default functions ("define" and "internal"). It is possible that you may have other functions you would like to include as part of the search criteria.
+
+	options: {
+		aliases: ["directive"]
+	}
+
 ####ignore
 
 **Type:** Array of files or String
@@ -52,6 +64,34 @@ There may be times when you want to include a definition that is not referenced 
 **Default:** *undefined*
 
 Your applications source files to know what to import into the build. Treeshake will inspect your source and look for references that match any definitions in the treeshake library files.
+
+###match
+
+**Type:** Function
+
+**Default:** *undefined*
+
+A custom function allowing you to find dependencies through your own parser. A content string is passed in as an argument. Expects an array will be returned with a list of definitions that were found.
+
+**Example of matching in an html template**
+
+This example is looking for the contents of a definition using dashes, and converts it to CamelCase before return the results.
+
+	options: {
+          match: function(content) {
+               var camelCase = function (str) {
+                    return str.replace(/-([a-z])/g, function (g) {
+                         return g[1].toUpperCase();
+                    });
+               };
+
+               var results = searchText.match(/my-[\w|-]+/gm);
+
+               for (var e in results) {
+                    results[e] = camelCase(results[e]);
+               }
+               return results;		
+          }	}
 
 ####minify
 
