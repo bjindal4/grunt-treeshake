@@ -54,17 +54,20 @@
         exports.$$pending = $$pending;
         delete $$pending[name];
     };
+    //! example/lib/ajax/http.js
     define("http", function() {
         return function() {
             return "http";
         };
     });
+    //! example/lib/ajax/jsonp.js
     internal("http.jsonp", [ "http" ], function(http) {
         return http.jsonp = function() {
             console.log("calling ", http());
             return "http.jsonp";
         };
     });
+    //! example/lib/object/extend.js
     define("extend", [ "isDefined" ], function(isDefined) {
         return function() {
             var result = isDefined();
@@ -72,11 +75,13 @@
             return "each";
         };
     });
+    //! example/lib/validators/isDefined.js
     define("isDefined", function() {
         return function(val) {
             return typeof val !== "undefined";
         };
     });
+    //! example/lib/validators/isNumber.js
     define("isNumber", function() {
         return function(val) {
             return !isNaN(val);

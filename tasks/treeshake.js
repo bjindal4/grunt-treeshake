@@ -375,7 +375,7 @@ module.exports = function (grunt) {
         // first we put our header on there for define and require.
         var str = header, i, len = files.length;
         for (i = 0; i < len; i += 1) {
-            str += '// ' + files[i].src + "\n";
+            str += '//! ' + files[i].src + "\n";
             str += grunt.file.read(files[i].src);
         }
         str += footer;
