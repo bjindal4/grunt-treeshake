@@ -42,7 +42,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
 
     var header, footer, cleanReservedWords, everythingElse;
-    cleanReservedWords = new RegExp('\\b(import|internal|define)\\b', 'g');
     everythingElse = /[^\*\.\w\d]/g;
 
     if (grunt.file.exists('./node_modules/grunt-treeshake/tasks/lib/header.js')) {
@@ -143,9 +142,9 @@ module.exports = function (grunt) {
         return str.join('');
     }
 
-    function getFileNameFromContents(path) {
+    function getFileNameFromContents(path, options) {
         var contents = grunt.file.read(path),
-            rx = new RegExp('(internal|define)([\\W\\s]+(("|\')[\\w|\\.]+\\3))+', 'gim'),
+            rx = new RegExp('(' + options.aliases + ')([\\W\\s]+(("|\')[\\w|\\.]+\\3))+', 'gim'),
             matches = contents.match(rx), i, len = matches && matches.length || 0;
         for (i = 0; i < len; i += 1) {
             matches[i] = matches[i].split(',').shift();// only get the first match in a statement.
@@ -158,16 +157,17 @@ module.exports = function (grunt) {
     /**
      * Build up all of the packages provided from the config.
      * @param {Object} files
+     * @param {Object} options
      * @returns {{}}
      */
-    function buildPackages(files) {
+    function buildPackages(files, options) {
         printVerbose('\nDefinitions:'.grey);
         var packages = {}, len, j, path, names, name;
         for (var i in files) {
             len = files[i].src.length;
             for (j = 0; j < len; j += 1) {
                 path = files[i].src[j];
-                names = getFileNameFromContents(path);
+                names = getFileNameFromContents(path, options);
                 while (names && names.length) {
                     name = names.shift();
                     packages[name] = path;
@@ -328,7 +328,7 @@ module.exports = function (grunt) {
                     for (j in packages) {
                         if (packages[j].indexOf(wild) !== -1) {
                             //print("\t*", wild.yellow, packages[j].green);
-                            names = getFileNameFromContents(packages[j]);
+                            names = getFileNameFromContents(packages[j], options);
                             while (names && names.length) {
                                 name = names.shift();
                                 dependencies[name] = {
@@ -465,8 +465,9 @@ module.exports = function (grunt) {
         options.inspect = toArray(options.inspect);
         options.aliases = toArray(options.aliases).concat(['internal', 'define']).join('|');
 
+        cleanReservedWords = new RegExp('\\b(import|' + options.aliases + ')\\b', 'g');
         // we build the whole package structure. We will filter it out later.
-        packages = buildPackages(this.files);
+        packages = buildPackages(this.files, options);
         ignored = filterHash({}, options.ignore, packages, options.wrap, options);
         files = filter(options.inspect, packages, options.wrap, options, ignored);
         if (options.report === 'verbose') {
