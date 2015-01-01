@@ -1,0 +1,2 @@
+module.directive('myTest', function () {
+});

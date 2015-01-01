@@ -274,7 +274,7 @@ module.exports = function (grunt) {
     }
 
     function findDependencies(path, packages, dependencies, wrap, options) {
-        var contents, i, len, rx, keys, len, cleanWrap, split, line;
+        var contents, i, len, rx, keys, len, cleanWrap, split, line, aliasKeys;
 
         contents = grunt.file.read(path);
         contents = removeComments(contents);
@@ -283,25 +283,27 @@ module.exports = function (grunt) {
         keys = contents.match(rx);
         len = keys && keys.length || 0;
         cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
-        keys = keys.concat(getAliasKeys(path, wrap));
+        console.log('### KEYS ###', keys.concat, getAliasKeys(path, wrap));
+        aliasKeys = keys.concat(getAliasKeys(path, wrap));
+        //keys = keys.concat(options.match(contents));
         // now we need to clean up the keys.
         //grunt.log.writeln("keys", keys);
         for (i = 0; i < len; i += 1) {
-            if (keys[i].indexOf(',') !== -1) {
-                split = keys[i].split(',');
-                keys = keys.concat(split);
-                len = keys.length;
+            if (aliasKeys[i].indexOf(',') !== -1) {
+                split = aliasKeys[i].split(',');
+                aliasKeys = aliasKeys.concat(split);
+                len = aliasKeys.length;
             } else {
                 line = getLineNumber(keys[i], path);
-                keys[i] = keys[i].replace(cleanWrap, '');
-                keys[i] = keys[i].replace(cleanReservedWords, '');
-                keys[i] = keys[i].replace(everythingElse, '');
-                keys[i] = {value: keys[i], line: line.num, char: line.char, from: path};
+                aliasKeys[i] = aliasKeys[i].replace(cleanWrap, '');
+                aliasKeys[i] = aliasKeys[i].replace(cleanReservedWords, '');
+                aliasKeys[i] = aliasKeys[i].replace(everythingElse, '');
+                aliasKeys[i] = {value: aliasKeys[i], line: line.num, char: line.char, from: path};
             }
         }
         //print("keys", keys);
-        if (keys) {
-            findKeys(keys, packages, dependencies, wrap, options);
+        if (aliasKeys) {
+            findKeys(aliasKeys, packages, dependencies, wrap, options);
             //print(JSON.stringify(dependencies, null, 2));
             return dependencies;// dependencies
         }
