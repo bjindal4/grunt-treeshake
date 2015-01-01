@@ -8,27 +8,26 @@ module.exports = function (grunt) {
                 options: {
                     wrap: 'demo',
                     minify: true,
-                    inspect: ['example/app.js', 'example/templates/test.html'],
+                    inspect: ['example/app.js', 'example/templates/*.html', 'example/bogus.js'],
                     import: ['ajax.*'],
                     report: 'verbose',
                     ignore: ['example/ignore.js'],
-                    //log: 'example/build/demo.log',
+                    log: 'example/build/demo.log',
                     aliases: ['directive'],
                     match: function (searchText) {
-                        return [];
-                        //var camelCase = function (str) {
-                        //    str.replace(/-([a-z])/g, function (g) {
-                        //        return g[1].toUpperCase();
-                        //    });
-                        //};
-                        //
-                        //var results = searchText.match(/my-[\w|-]+/gm);
-                        ////console.log("### RESULTS ####", searchText, results);
-                        //
-                        //for (var e in results) {
-                        //    results[e] = camelCase(results[e]);
-                        //}
-                        //return results || [];
+                        //return [];
+                        var camelCase = function (str) {
+                            return str.replace(/-([a-z])/g, function (g) {
+                                return g[1].toUpperCase();
+                            });
+                        };
+
+                        var results = searchText.match(/my-[\w|-]+/gm);
+
+                        for (var e in results) {
+                            results[e] = camelCase(results[e]);
+                        }
+                        return results;
                     },
                 },
                 files: {

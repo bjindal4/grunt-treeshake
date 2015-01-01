@@ -180,12 +180,16 @@ module.exports = function (grunt) {
 
     function filterHash(dependencies, paths, packages, wrap, options) {
         paths = paths || [];
-        var i, len = paths.length;
+        var i, len = paths.length, expanded;
         dependencies = dependencies || {};
-        paths = grunt.file.expand(paths);
         for (i = 0; i < len; i += 1) {
             //print.apply(options, [paths[i]]);
-            findDependencies(paths[i], packages, dependencies, wrap, options);
+            if (paths[i].indexOf('*') !== -1) {
+                expanded = grunt.file.expand(paths[i]);
+                filterHash(dependencies, expanded, packages, wrap, options);
+            } else if (grunt.file.exists(paths[i])) {
+                findDependencies(paths[i], packages, dependencies, wrap, options);
+            }
         }
         return dependencies;
     }
@@ -207,7 +211,7 @@ module.exports = function (grunt) {
         if (options.import) {
             // populates those on dependencies.
             findKeys(options.import, packages, dependencies, wrap, options);
-            for(i in dependencies) {
+            for (i in dependencies) {
                 if (dependencies.hasOwnProperty(i)) {
                     dependencies[i].type = 'import';
                 }
@@ -274,36 +278,39 @@ module.exports = function (grunt) {
     }
 
     function findDependencies(path, packages, dependencies, wrap, options) {
-        var contents, i, len, rx, keys, len, cleanWrap, split, line, aliasKeys;
+        //grunt.log.writeln('##PATH##', path);
+        var contents = '', i, len, rx, keys, len, cleanWrap, split, line, keys;
 
-        contents = grunt.file.read(path);
-        contents = removeComments(contents);
+        if (grunt.file.exists(path)) {
+            contents = grunt.file.read(path);
+            contents = removeComments(contents);
+        }
+
         //print(contents);
         rx = new RegExp('((' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?|(' + options.aliases + ')([\\W\\s]+(("|\')[\\w|\\.]+))+)', 'gim');
-        keys = contents.match(rx);
+        keys = contents.match(rx) || [];
         len = keys && keys.length || 0;
         cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
-        console.log('### KEYS ###', keys.concat, getAliasKeys(path, wrap));
-        aliasKeys = keys.concat(getAliasKeys(path, wrap));
-        //keys = keys.concat(options.match(contents));
+        keys = keys.concat(getAliasKeys(path, wrap) || []);
+        keys = keys.concat(options.match(contents) || []);
         // now we need to clean up the keys.
         //grunt.log.writeln("keys", keys);
         for (i = 0; i < len; i += 1) {
-            if (aliasKeys[i].indexOf(',') !== -1) {
-                split = aliasKeys[i].split(',');
-                aliasKeys = aliasKeys.concat(split);
-                len = aliasKeys.length;
+            if (keys[i].indexOf(',') !== -1) {
+                split = keys[i].split(',');
+                keys = keys.concat(split);
+                len = keys.length;
             } else {
                 line = getLineNumber(keys[i], path);
-                aliasKeys[i] = aliasKeys[i].replace(cleanWrap, '');
-                aliasKeys[i] = aliasKeys[i].replace(cleanReservedWords, '');
-                aliasKeys[i] = aliasKeys[i].replace(everythingElse, '');
-                aliasKeys[i] = {value: aliasKeys[i], line: line.num, char: line.char, from: path};
+                keys[i] = keys[i].replace(cleanWrap, '');
+                keys[i] = keys[i].replace(cleanReservedWords, '');
+                keys[i] = keys[i].replace(everythingElse, '');
+                keys[i] = {value: keys[i], line: line.num, char: line.char, from: path};
             }
         }
         //print("keys", keys);
-        if (aliasKeys) {
-            findKeys(aliasKeys, packages, dependencies, wrap, options);
+        if (keys) {
+            findKeys(keys, packages, dependencies, wrap, options);
             //print(JSON.stringify(dependencies, null, 2));
             return dependencies;// dependencies
         }

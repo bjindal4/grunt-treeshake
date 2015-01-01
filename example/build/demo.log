@@ -1,12 +1,13 @@
-------Thu Jan 01 2015 08:56:16 GMT-0700 (MST)------
+------Thu Jan 01 2015 12:50:57 GMT-0700 (MST)------
 
 Output:
-	example/build/demo.js 3.05k
-	example/build/demo.min.js 1.20k
+	example/build/demo.js 3.14k
+	example/build/demo.min.js 1.24k
 
 Definitions: 
 	http 
 	http.jsonp 
+	myTest 
 	each 
 	extend 
 	isDefined 
@@ -18,6 +19,7 @@ Included:
 	example/lib/object/extend.js - Gruntfile.js:import object.* 
 	example/lib/validators/isDefined.js - example/lib/object/extend.js:4 
 	example/lib/validators/isNumber.js - example/app.js:12 
+	example/lib/directives/my-test.js - Gruntfile.js:undefined myTest 
 
 Ignored: 
 	example/lib/object/each.js - example/ignore.js:1 

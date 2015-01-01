@@ -67,6 +67,28 @@
             return "http.jsonp";
         };
     });
+    //! example/lib/object/extend.js
+    define("extend", [ "isDefined" ], function(isDefined) {
+        return function() {
+            var result = isDefined();
+            console.log(result);
+            return "each";
+        };
+    });
+    //! example/lib/validators/isDefined.js
+    define("isDefined", function() {
+        return function(val) {
+            return typeof val !== "undefined";
+        };
+    });
+    //! example/lib/validators/isNumber.js
+    define("isNumber", function() {
+        return function(val) {
+            return !isNaN(val);
+        };
+    });
+    //! example/lib/directives/my-test.js
+    module.directive("myTest", function() {});
     for (var name in $$cache) {
         resolve(name, $$cache[name]);
     }
