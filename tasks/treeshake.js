@@ -34,7 +34,13 @@ module.exports = function (grunt) {
         },
         printFileLine = function (fileKey, color) {
             fileKey.from = fileKey.from || 'Gruntfile.js';
-            var str = fileKey.src[color] + (' - ' + fileKey.from + ':' + (fileKey.line !== undefined ? fileKey.line : fileKey.type + ' ' + fileKey.value)).grey;
+            var str = fileKey.src[color] + ' - ' + fileKey.from;
+            if (fileKey.line || fileKey.line === 0) {
+                str += ':' + fileKey.line;
+            } else if(fileKey.line === undefined) {
+                str += ':' + fileKey.type + ' ' + fileKey.value;
+            }
+            str = str.grey;
             print.apply(this, ["\t" + str]);
         };
 
@@ -210,7 +216,7 @@ module.exports = function (grunt) {
         // if they provide imports. We need to add them.
         if (options.import) {
             // populates those on dependencies.
-            findKeys(options.import, packages, dependencies, wrap, options);
+            findKeys('Gruntfile.js', options.import, packages, dependencies, wrap, options);
             for (i in dependencies) {
                 if (dependencies.hasOwnProperty(i)) {
                     dependencies[i].type = 'import';
@@ -278,7 +284,7 @@ module.exports = function (grunt) {
     }
 
     function findDependencies(path, packages, dependencies, wrap, options) {
-        //grunt.log.writeln('##PATH##', path);
+        grunt.log.writeln('##PATH##', path);
         var contents = '', i, len, rx, keys, len, cleanWrap, split, line, keys;
 
         if (grunt.file.exists(path)) {
@@ -290,7 +296,7 @@ module.exports = function (grunt) {
         rx = new RegExp('((' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?|(' + options.aliases + ')([\\W\\s]+(("|\')[\\w|\\.]+))+)', 'gim');
         keys = contents.match(rx) || [];
         len = keys && keys.length || 0;
-        cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
+        //cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
         keys = keys.concat(getAliasKeys(path, wrap) || []);
         keys = keys.concat(options.match(contents) || []);
         // now we need to clean up the keys.
@@ -301,22 +307,34 @@ module.exports = function (grunt) {
                 keys = keys.concat(split);
                 len = keys.length;
             } else {
-                line = getLineNumber(keys[i], path);
-                keys[i] = keys[i].replace(cleanWrap, '');
-                keys[i] = keys[i].replace(cleanReservedWords, '');
-                keys[i] = keys[i].replace(everythingElse, '');
-                keys[i] = {value: keys[i], line: line.num, char: line.char, from: path};
+                keys[i] = makeKey(keys[i], path, null, options);
+                //line = getLineNumber(keys[i], path);
+                //keys[i] = keys[i].replace(cleanWrap, '');
+                //keys[i] = keys[i].replace(cleanReservedWords, '');
+                //keys[i] = keys[i].replace(everythingElse, '');
+                //grunt.log.writeln(keys[i], path);
+                //keys[i] = {value: keys[i], line: line.num, char: line.char, from: path};
             }
         }
         //print("keys", keys);
         if (keys) {
-            findKeys(keys, packages, dependencies, wrap, options);
+            findKeys(path, keys, packages, dependencies, wrap, options);
             //print(JSON.stringify(dependencies, null, 2));
             return dependencies;// dependencies
         }
     }
 
-    function findKeys(keys, packages, dependencies, wrap, options) {
+    function makeKey(value, from, src, options) {
+        var line = from !== 'Gruntfile' ? getLineNumber(value, from) : null;
+        var cleanWrap = new RegExp('\\b' + options.wrap + '\\.', 'gi');
+        value = value.replace(cleanWrap, '');
+        value = value.replace(cleanReservedWords, '');
+        value = value.replace(everythingElse, '');
+        grunt.log.writeln(value, from);
+        return {value: value, src: src, line: line && line.num, from: from, type: from === 'Gruntfile' ? 'file' : 'import'};
+    }
+
+    function findKeys(path, keys, packages, dependencies, wrap, options) {
         var len = keys.length, match, i, names, j, key, name;
         for (i = 0; i < len; i += 1) {
             key = keys[i];
@@ -326,7 +344,9 @@ module.exports = function (grunt) {
                 }
                 match = packages[key.value];
                 if (match && !dependencies[key.value]) {
-                    key.src = match;
+                    key = makeKey(key.value, path, match, options);
+                    //key.src = match;
+                    //key.from = key.from || path;
                     dependencies[key.value] = key;
                     //print("find dependencies in", match);
                     findDependencies(match, packages, dependencies, wrap, options);
