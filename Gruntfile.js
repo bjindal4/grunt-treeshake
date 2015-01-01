@@ -12,7 +12,7 @@ module.exports = function (grunt) {
                     import: ['ajax.*'],
                     report: 'verbose',
                     ignore: ['example/ignore.js'],
-                    log: 'example/build/demo.log',
+                    //log: 'example/build/demo.log',
                     aliases: ['directive'],
                     match: function (searchText) {
                         //return [];
@@ -31,7 +31,7 @@ module.exports = function (grunt) {
                     },
                 },
                 files: {
-                    'example/build/demo.js': ['example/lib/**/**.js']
+                    'example/build/demo.js': ['example/lib/**/**.js', 'example/lib/**/**.js']
                 }
             }
         }

@@ -34,14 +34,14 @@ module.exports = function (grunt) {
         },
         printFileLine = function (fileKey, color) {
             fileKey.from = fileKey.from || 'Gruntfile.js';
-            var str = fileKey.src[color] + ' - ' + fileKey.from;
+            var str = fileKey.src[color];
+            var str2 = ' - ' + fileKey.from;
             if (fileKey.line || fileKey.line === 0) {
-                str += ':' + fileKey.line;
+                str2 += ':' + fileKey.line;
             } else if(fileKey.line === undefined) {
-                str += ':' + fileKey.type + ' ' + fileKey.value;
+                str2 += ':' + fileKey.type + ' ' + fileKey.value;
             }
-            str = str.grey;
-            print.apply(this, ["\t" + str]);
+            print.apply(this, ["\t" + str + str2.grey]);
         };
 
     grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -212,7 +212,7 @@ module.exports = function (grunt) {
      */
     function filter(paths, packages, wrap, options, ignored) {
         paths = paths || [];
-        var result = [], i, dependencies = {};
+        var result = [], i, dependencies = {}, written = {};
         // if they provide imports. We need to add them.
         if (options.import) {
             // populates those on dependencies.
@@ -226,7 +226,8 @@ module.exports = function (grunt) {
         filterHash(dependencies, paths, packages, wrap, options);
         printReport("\nIncluded:");
         for (i in dependencies) {
-            if (dependencies.hasOwnProperty(i)) {
+            if (dependencies.hasOwnProperty(i) && !written[dependencies[i].src]) {
+                written[dependencies[i].src] = true;
                 if (ignored && ignored.hasOwnProperty(i)) {
                     ignored[i].ignoreCount = (ignored[i].ignoreCount || 0) + 1;
                 } else {
@@ -234,6 +235,9 @@ module.exports = function (grunt) {
                     printFileLine(dependencies[i], 'green');
                 }
                 //printReport("\t" + dependencies[i].green);
+            } else {
+                // this is for duplicates that are skipped because they has multiple references in multiple files.
+                //grunt.log.writeln("SKIP " + dependencies[i].src);
             }
         }
         return result;
@@ -284,8 +288,8 @@ module.exports = function (grunt) {
     }
 
     function findDependencies(path, packages, dependencies, wrap, options) {
-        grunt.log.writeln('##PATH##', path);
-        var contents = '', i, len, rx, keys, len, cleanWrap, split, line, keys;
+        //grunt.log.writeln('##PATH##', path);
+        var contents = '', i, len, rx, keys, len, split, keys;
 
         if (grunt.file.exists(path)) {
             contents = grunt.file.read(path);
@@ -308,12 +312,6 @@ module.exports = function (grunt) {
                 len = keys.length;
             } else {
                 keys[i] = makeKey(keys[i], path, null, options);
-                //line = getLineNumber(keys[i], path);
-                //keys[i] = keys[i].replace(cleanWrap, '');
-                //keys[i] = keys[i].replace(cleanReservedWords, '');
-                //keys[i] = keys[i].replace(everythingElse, '');
-                //grunt.log.writeln(keys[i], path);
-                //keys[i] = {value: keys[i], line: line.num, char: line.char, from: path};
             }
         }
         //print("keys", keys);
@@ -330,7 +328,7 @@ module.exports = function (grunt) {
         value = value.replace(cleanWrap, '');
         value = value.replace(cleanReservedWords, '');
         value = value.replace(everythingElse, '');
-        grunt.log.writeln(value, from);
+        //grunt.log.writeln(value, from);
         return {value: value, src: src, line: line && line.num, from: from, type: from === 'Gruntfile' ? 'file' : 'import'};
     }
 
