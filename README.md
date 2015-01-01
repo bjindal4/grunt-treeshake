@@ -23,7 +23,7 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 
 ####ignore
 
-**Type:** Array of files
+**Type:** Array of files or String
 
 **Default:** *undefined*
 
@@ -47,7 +47,7 @@ There may be times when you want to include a definition that is not referenced 
 
 ####inspect
 
-**Type:** Array of files
+**Type:** Array of files or String
 
 **Default:** *undefined*
 
