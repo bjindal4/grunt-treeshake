@@ -12,7 +12,7 @@ module.exports = function (grunt) {
                     import: ['ajax.*'],
                     report: 'verbose',
                     ignore: ['example/ignore.js'],
-                    log: 'example/build/demo.log',
+                    //log: 'example/build/demo.log',
                     //clearLog: false,
                     //logLimit: 500
                 },

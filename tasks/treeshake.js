@@ -223,12 +223,13 @@ module.exports = function (grunt) {
         return result;
     }
 
-    function getLineNumber(str, content) {
-        var parts = content.split(/(\n|\r)/g), i, len = parts.length, index;
+    function getLineNumber(str, path) {
+        var content = grunt.file.read(path),// we must get our own content so it still has comment lines in it.
+            parts = content.replace(/(\n\r|\r\n|\r)/g, "\n").split("\n"), i, len = parts.length, index;
         for (i = 0; i < len; i += 1) {
             index = parts[i].indexOf(str);
             if (index !== -1) {
-                return {num: i + 2};
+                return {num: i + 1};
             }
         }
         return '';
@@ -249,7 +250,7 @@ module.exports = function (grunt) {
         function handleMatch(match, g1, g2) {
             var key, line;
             if (g1.length > 1) {
-                line = getLineNumber(g1, contents);
+                line = getLineNumber(g1, path);
                 key = {value: g1.substr(1, g1.length).replace(everythingElse, ''), line: line.num, from:path};
                 keys.push(key);
             }
@@ -285,7 +286,7 @@ module.exports = function (grunt) {
                 keys = keys.concat(split);
                 len = keys.length;
             } else {
-                line = getLineNumber(keys[i], contents);
+                line = getLineNumber(keys[i], path);
                 keys[i] = keys[i].replace(cleanWrap, '');
                 keys[i] = keys[i].replace(cleanReservedWords, '');
                 keys[i] = keys[i].replace(everythingElse, '');
