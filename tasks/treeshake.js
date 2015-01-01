@@ -427,6 +427,13 @@ module.exports = function (grunt) {
         }
     }
 
+    function toArray(item) {
+        if (item && typeof item === "string") {
+            return [item];
+        }
+        return item;
+    }
+
     grunt.registerMultiTask('treeshake', 'Optimize files added', function () {
         var target = this.target,
             packages,
@@ -439,6 +446,9 @@ module.exports = function (grunt) {
         });
         printOptions.report = options.report;
         printOptions.log = options.log;
+        options.import = toArray(options.import);
+        options.ignore = toArray(options.ignore);
+        options.inspect = toArray(options.inspect);
 
         // we build the whole package structure. We will filter it out later.
         packages = buildPackages(this.files);

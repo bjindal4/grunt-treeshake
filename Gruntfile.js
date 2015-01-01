@@ -13,8 +13,6 @@ module.exports = function (grunt) {
                     report: 'verbose',
                     ignore: ['example/ignore.js'],
                     //log: 'example/build/demo.log',
-                    //clearLog: false,
-                    //logLimit: 500
                 },
                 files: {
                     'example/build/demo.js': ['example/lib/**/**.js']
