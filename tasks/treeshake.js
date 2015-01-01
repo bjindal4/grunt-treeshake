@@ -485,7 +485,10 @@ module.exports = function (grunt) {
 
         var options = this.options({
             wrap: this.target,
-            log: consoleStr
+            log: consoleStr,
+            match: function() {
+                return [];
+            }
         });
         printOptions.report = options.report;
         printOptions.log = options.log;
