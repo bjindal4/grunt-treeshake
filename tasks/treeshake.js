@@ -251,7 +251,7 @@ module.exports = function (grunt) {
             var key, line;
             if (g1.length > 1) {
                 line = getLineNumber(g1, path);
-                key = {value: g1.substr(1, g1.length).replace(everythingElse, ''), line: line.num, from:path};
+                key = {value: g1.substr(1, g1.length).replace(everythingElse, ''), line: line.num, from: path};
                 keys.push(key);
             }
             return match;
@@ -385,7 +385,6 @@ module.exports = function (grunt) {
     }
 
     function writeFiles(dest, files, options, target) {
-        print("\nOutput:\n\t" + dest.blue);
         if (options.wrap) {
             var buildFiles = {};
             buildFiles[dest] = files;
@@ -424,6 +423,15 @@ module.exports = function (grunt) {
 
             grunt.config.set('clean', clean);
             grunt.task.run('clean:' + target);
+
+            var filesize = {};
+            filesize[target] = {
+                path: dest,
+                pathMin: dest.substr(0, dest.length - 3) + '.min.js',
+                log: options.log
+            };
+            grunt.config.set('treeshake-filesize', filesize);
+            grunt.task.run('treeshake-filesize:' + target);
         }
     }
 
@@ -461,9 +469,40 @@ module.exports = function (grunt) {
         //print.apply(options, [files]);
         writeSources(options.wrap, files, '.tmp/treeshake.js');
         writeFiles(this.files[0].dest, ['.tmp/treeshake.js'], options, target);
-        if (printOptions.log !== consoleStr) {
-            var content = '';
-            printStr = '------' + new Date().toLocaleString() + "------\n" + printStr + "\n" + content;
+        //if (printOptions.log !== consoleStr) {
+        //    var content = '';
+        //    printStr = '------' + new Date().toLocaleString() + "------\n" + printStr + "\n" + content;
+        //    grunt.file.write(printOptions.log, printStr);
+        //}
+    });
+
+    var fs = require('fs');
+
+    grunt.registerMultiTask('treeshake-filesize', 'A Grunt plugin for logging filesize.', function () {
+        var data = this.data;
+
+        function getSize(path) {
+            if (grunt.file.exists(path)) {
+                var stat = fs.statSync(path);
+                return (stat.size / 1024).toFixed(2);
+            }
+        }
+
+        if (printOptions.log === consoleStr) {
+            print("\nOutput:");
+            print("\t" + data.path.blue, (getSize(data.path) + 'k').green);
+            if (data.pathMin) {
+                print("\t" + data.pathMin.blue, (getSize(data.pathMin) + 'k').green);
+            }
+        } else {
+            var output = "Output:\n" +
+                "\t" + data.path + " " + getSize(data.path) + 'k' + "\n";
+            if (data.pathMin) {
+                output += "\t" + data.pathMin + " " + getSize(data.pathMin) + 'k' + "\n";
+            }
+
+            printStr = '------' + new Date().toLocaleString() + "------\n\n" + output + printStr;
+
             grunt.file.write(printOptions.log, printStr);
         }
     });

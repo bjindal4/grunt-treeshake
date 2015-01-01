@@ -21,5 +21,5 @@ module.exports = function (grunt) {
         }
     });
 
-    grunt.registerTask('demo', 'treeshake');
+    grunt.registerTask('default', 'treeshake');
 };
