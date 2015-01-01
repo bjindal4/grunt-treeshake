@@ -279,7 +279,7 @@ module.exports = function (grunt) {
         contents = grunt.file.read(path);
         contents = removeComments(contents);
         //print(contents);
-        rx = new RegExp('((' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?|(internal|define)([\\W\\s]+(("|\')[\\w|\\.]+))+)', 'gim');
+        rx = new RegExp('((' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?|(' + options.aliases + ')([\\W\\s]+(("|\')[\\w|\\.]+))+)', 'gim');
         keys = contents.match(rx);
         len = keys && keys.length || 0;
         cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
@@ -445,7 +445,7 @@ module.exports = function (grunt) {
         if (item && typeof item === "string") {
             return [item];
         }
-        return item;
+        return item || [];
     }
 
     grunt.registerMultiTask('treeshake', 'Optimize files added', function () {
@@ -463,6 +463,7 @@ module.exports = function (grunt) {
         options.import = toArray(options.import);
         options.ignore = toArray(options.ignore);
         options.inspect = toArray(options.inspect);
+        options.aliases = toArray(options.aliases).concat(['internal', 'define']).join('|');
 
         // we build the whole package structure. We will filter it out later.
         packages = buildPackages(this.files);
