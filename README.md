@@ -21,18 +21,6 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 
 ###Grunt options
 
-####aliases
-
-**Type:** Array of strings or String
-
-**Default:** ["define", "internal"]
-
-Expands the search to look beyond the default functions ("define" and "internal"). It is possible that you may have other functions you would like to include as part of the search criteria.
-
-	options: {
-		aliases: ["directive"]
-	}
-
 ####ignore
 
 **Type:** Array of files or String
