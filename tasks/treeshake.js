@@ -175,6 +175,8 @@ module.exports = function (grunt) {
      * @returns {{}}
      */
     function buildPackages(files, options) {
+//TODO: this needs to make sure it only picks up on a define. So that it will only say this file is the define. directives, services or other things should not define a definition.
+        //TODO: need to sort alphabetically
         printVerbose('\nDefinitions:'.grey);
         var packages = {}, len, j, path, names, name;
         for (var i in files) {
@@ -512,7 +514,7 @@ module.exports = function (grunt) {
         options.import = toArray(options.import);
         options.ignore = toArray(options.ignore);
         options.inspect = toArray(options.inspect);
-        options.aliases = toArray(options.aliases).concat(['internal', 'define']).join('|');
+        options.aliases = 'internal|define';//toArray(options.aliases).concat(['internal', 'define']).join('|');
         //TODO: we couldn't think of a reason to keep this to force an include.
         //options.includes = toArray(options.includes);
 
@@ -539,6 +541,7 @@ module.exports = function (grunt) {
 
     grunt.registerMultiTask('treeshake-filesize', 'A Grunt plugin for logging filesize.', function () {
         var data = this.data;
+        cache = {};
 
         function getSize(path) {
             if (grunt.file.exists(path)) {
