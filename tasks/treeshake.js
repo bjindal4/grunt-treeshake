@@ -9,6 +9,7 @@ module.exports = function (grunt) {
 }());';
 
     var consoleStr = 'console',
+        cache = {},
         printStr = '',
         printOptions = {report: false},
         print = function () {
@@ -36,9 +37,9 @@ module.exports = function (grunt) {
             fileKey.from = fileKey.from || 'Gruntfile.js';
             var str = fileKey.src[color];
             var str2 = ' - ' + fileKey.from;
-            if (fileKey.line || fileKey.line === 0) {
+            if (fileKey.type === 'file') {
                 str2 += ':' + fileKey.line;
-            } else if(fileKey.line === undefined) {
+            } else {
                 str2 += ':' + fileKey.type + ' ' + fileKey.value;
             }
             print.apply(this, ["\t" + str + str2.grey]);
@@ -148,8 +149,15 @@ module.exports = function (grunt) {
         return str.join('');
     }
 
+    function getPath(path) {
+        if (!cache[path]) {
+            cache[path] = grunt.file.read(path);
+        }
+        return cache[path];
+    }
+
     function getFileNameFromContents(path, options) {
-        var contents = grunt.file.read(path),
+        var contents = getPath(path),
             rx = new RegExp('(' + options.aliases + ')([\\W\\s]+(("|\')[\\w|\\.]+\\3))+', 'gim'),
             matches = contents.match(rx), i, len = matches && matches.length || 0;
         for (i = 0; i < len; i += 1) {
@@ -216,14 +224,9 @@ module.exports = function (grunt) {
         // if they provide imports. We need to add them.
         if (options.import) {
             // populates those on dependencies.
-            findKeys('Gruntfile.js', options.import, packages, dependencies, wrap, options);
-            for (i in dependencies) {
-                if (dependencies.hasOwnProperty(i)) {
-                    dependencies[i].type = 'import';
-                }
-            }
+            findKeys('Gruntfile.js', options.import, packages, dependencies, wrap, options, 'import');
         }
-        filterHash(dependencies, paths, packages, wrap, options);
+        filterHash(dependencies, paths, packages, wrap, options, 'file');
         printReport("\nIncluded:");
         for (i in dependencies) {
             if (dependencies.hasOwnProperty(i) && !written[dependencies[i].src]) {
@@ -244,7 +247,7 @@ module.exports = function (grunt) {
     }
 
     function getLineNumber(str, path) {
-        var content = grunt.file.read(path),// we must get our own content so it still has comment lines in it.
+        var content = getPath(path),// we must get our own content so it still has comment lines in it.
             parts = content.replace(/(\n\r|\r\n|\r)/g, "\n").split("\n"), i, len = parts.length, index;
         for (i = 0; i < len; i += 1) {
             index = parts[i].indexOf(str);
@@ -260,7 +263,7 @@ module.exports = function (grunt) {
     }
 
     function getAliasKeys(path, wrap) {
-        var contents = grunt.file.read(path), aliases = [], rx, keys = [], i, len, matches = [];
+        var contents = getPath(path), aliases = [], rx, keys = [], i, len, matches = [];
         contents = removeComments(contents);
         contents.replace(new RegExp('(\\w+)\\s?=\\s?' + wrap + ';', 'g'), function (match, g1) {
             aliases.push(g1);
@@ -292,7 +295,7 @@ module.exports = function (grunt) {
         var contents = '', i, len, rx, keys, len, split, keys;
 
         if (grunt.file.exists(path)) {
-            contents = grunt.file.read(path);
+            contents = getPath(path);
             contents = removeComments(contents);
         }
 
@@ -316,23 +319,29 @@ module.exports = function (grunt) {
         }
         //print("keys", keys);
         if (keys) {
-            findKeys(path, keys, packages, dependencies, wrap, options);
+            findKeys(path, keys, packages, dependencies, wrap, options, 'file');
             //print(JSON.stringify(dependencies, null, 2));
             return dependencies;// dependencies
         }
     }
 
-    function makeKey(value, from, src, options) {
+    function makeKey(value, from, src, options, forceType) {
         var line = from !== 'Gruntfile' ? getLineNumber(value, from) : null;
         var cleanWrap = new RegExp('\\b' + options.wrap + '\\.', 'gi');
         value = value.replace(cleanWrap, '');
         value = value.replace(cleanReservedWords, '');
         value = value.replace(everythingElse, '');
         //grunt.log.writeln(value, from);
-        return {value: value, src: src, line: line && line.num, from: from, type: from === 'Gruntfile' ? 'file' : 'import'};
+        return {
+            value: value,
+            src: src,
+            line: line && line.num,
+            from: from,
+            type: forceType || (from === 'Gruntfile' ? 'file' : 'import')
+        };
     }
 
-    function findKeys(path, keys, packages, dependencies, wrap, options) {
+    function findKeys(path, keys, packages, dependencies, wrap, options, forceType) {
         var len = keys.length, match, i, names, j, key, name;
         for (i = 0; i < len; i += 1) {
             key = keys[i];
@@ -342,12 +351,10 @@ module.exports = function (grunt) {
                 }
                 match = packages[key.value];
                 if (match && !dependencies[key.value]) {
-                    key = makeKey(key.value, path, match, options);
-                    //key.src = match;
-                    //key.from = key.from || path;
+                    key = makeKey(key.value, path, match, options, forceType);
                     dependencies[key.value] = key;
                     //print("find dependencies in", match);
-                    findDependencies(match, packages, dependencies, wrap, options);
+                    findDependencies(match, packages, dependencies, wrap, options, 'file');// do not pass force type to recursion. recursion should be of type file.
                 } else if (key.value && key.value.indexOf && key.value.indexOf('*') !== -1) {
                     // these will be strings not objects for keys.
                     var wild = key.value.substr(0, key.value.length - 1).split('.').join('/');
@@ -358,13 +365,14 @@ module.exports = function (grunt) {
                             names = getFileNameFromContents(packages[j], options);
                             while (names && names.length) {
                                 name = names.shift();
-                                dependencies[name] = {
-                                    src: packages[name],
-                                    from: 'Gruntfile.js',
-                                    type: 'import',
-                                    value: key.value
-                                };
-                                findDependencies(packages[j], packages, dependencies, wrap, options);
+                                dependencies[name] = makeKey(key.value, 'Gruntfile.js', packages[name], options, '*import');
+                                //dependencies[name] = {
+                                //    src: packages[name],
+                                //    from: 'Gruntfile.js',
+                                //    type: 'import',
+                                //    value: key.value
+                                //};
+                                findDependencies(packages[j], packages, dependencies, wrap, options, 'file');// do not pass force type to recursion. recursion should be of type file.
                             }
                         }
                     }
@@ -404,12 +412,23 @@ module.exports = function (grunt) {
         }
     }
 
-    function writeSources(wrap, files, dest) {
+    function writeSources(wrap, files, dest, options) {
         // first we put our header on there for define and require.
-        var str = header, i, len = files.length;
+        var str = header, i, len;
+        //TODO: we couldn't think of a reason to keep this to force an include.
+        //len = options.includes.length, key;
+        //if (len) {
+        //    print("\nForced Includes:");
+        //    for (i = 0; i < len; i += 1) {
+        //        key = makeKey('include.' + i, 'Gruntfile.js', options.includes[i], options, 'include');
+        //        files.push(key);
+        //        printFileLine(key, 'yellow');
+        //    }
+        //}
+        len = files.length;
         for (i = 0; i < len; i += 1) {
             str += '//! ' + files[i].src + "\n";
-            str += grunt.file.read(files[i].src);
+            str += getPath(files[i].src);
         }
         str += footer;
         str = str.split('{$$namespace}').join(wrap);
@@ -484,7 +503,7 @@ module.exports = function (grunt) {
         var options = this.options({
             wrap: this.target,
             log: consoleStr,
-            match: function() {
+            match: function () {
                 return [];
             }
         });
@@ -494,6 +513,8 @@ module.exports = function (grunt) {
         options.ignore = toArray(options.ignore);
         options.inspect = toArray(options.inspect);
         options.aliases = toArray(options.aliases).concat(['internal', 'define']).join('|');
+        //TODO: we couldn't think of a reason to keep this to force an include.
+        //options.includes = toArray(options.includes);
 
         cleanReservedWords = new RegExp('\\b(import|' + options.aliases + ')\\b', 'g');
         // we build the whole package structure. We will filter it out later.
@@ -505,7 +526,7 @@ module.exports = function (grunt) {
         }
         // generate file.
         //print.apply(options, [files]);
-        writeSources(options.wrap, files, '.tmp/treeshake.js');
+        writeSources(options.wrap, files, '.tmp/treeshake.js', options);
         writeFiles(this.files[0].dest, ['.tmp/treeshake.js'], options, target);
         //if (printOptions.log !== consoleStr) {
         //    var content = '';
