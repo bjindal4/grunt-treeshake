@@ -175,11 +175,10 @@ module.exports = function (grunt) {
      * @returns {{}}
      */
     function buildPackages(files, options) {
-//TODO: this needs to make sure it only picks up on a define. So that it will only say this file is the define. directives, services or other things should not define a definition.
-        //TODO: need to sort alphabetically
         printVerbose('\nDefinitions:'.grey);
-        var packages = {}, len, j, path, names, name;
-        for (var i in files) {
+        var packages = {}, len, i, j, path, names, name;
+        var defs = [];
+        for (i in files) {
             len = files[i].src.length;
             for (j = 0; j < len; j += 1) {
                 path = files[i].src[j];
@@ -187,9 +186,13 @@ module.exports = function (grunt) {
                 while (names && names.length) {
                     name = names.shift();
                     packages[name] = path;
-                    printVerbose("\t" + (name + '').grey);
+                    defs.push(name);
                 }
             }
+        }
+        defs.sort();
+        for(i in defs) {
+            printVerbose("\t" + (defs[i] + '').grey);
         }
         return packages;
     }
@@ -237,7 +240,6 @@ module.exports = function (grunt) {
                     ignored[i].ignoreCount = (ignored[i].ignoreCount || 0) + 1;
                 } else {
                     result.push(dependencies[i]);
-                    printFileLine(dependencies[i], 'green');
                 }
                 //printReport("\t" + dependencies[i].green);
             } else {
@@ -245,6 +247,12 @@ module.exports = function (grunt) {
                 //grunt.log.writeln("SKIP " + dependencies[i].src);
             }
         }
+
+        result.sort();
+        for(i in result) {
+            printFileLine(result[i], 'green');
+        }
+
         return result;
     }
 
@@ -397,7 +405,7 @@ module.exports = function (grunt) {
     function printExclusions(files, packages, ignored) {
         print("\nIgnored:".grey);
         printIgnores(ignored);
-        var len = files.length, i, j, found;
+        var len = files.length, i, j, found, result = [];
         for (i in packages) {
             if (packages.hasOwnProperty(i)) {
                 found = null;
@@ -408,9 +416,14 @@ module.exports = function (grunt) {
                     }
                 }
                 if (!found) {
-                    print("\t" + packages[i].grey);
+                    result.push(packages[i]);
                 }
             }
+        }
+
+        result.sort();
+        for(i in result) {
+            print("\t" + result[i].grey);
         }
     }
 
@@ -514,7 +527,7 @@ module.exports = function (grunt) {
         options.import = toArray(options.import);
         options.ignore = toArray(options.ignore);
         options.inspect = toArray(options.inspect);
-        options.aliases = 'internal|define';//toArray(options.aliases).concat(['internal', 'define']).join('|');
+        options.aliases = 'internal|define';
         //TODO: we couldn't think of a reason to keep this to force an include.
         //options.includes = toArray(options.includes);
 
