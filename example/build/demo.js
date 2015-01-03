@@ -31,7 +31,7 @@
         for (var i in injections) {
             injectionName = injections[i];
             if ($$cache[injectionName]) {
-                if ($$pending[injectionName]) {
+                if ($$pending.hasOwnProperty(injectionName)) {
                     throw new Error('Cyclical reference: "' + name + '" referencing "' + injectionName + '"');
                 }
                 resolve(injectionName, $$cache[injectionName]);
@@ -44,9 +44,9 @@
                 args.push(exports[injectionName] || $$internals[injectionName]);
             }
             if (fn.$internal) {
-                $$internals[name] = fn.apply(null, args);
+                $$internals[name] = fn.apply(null, args) || name;
             } else {
-                exports[name] = fn.apply(null, args);
+                exports[name] = fn.apply(null, args) || name;
             }
         }
         exports.$$cache = $$cache;
@@ -65,6 +65,12 @@
         return http.jsonp = function() {
             console.log("calling ", http());
             return "http.jsonp";
+        };
+    });
+    //! example/lib/object/each.js
+    define("each", function() {
+        return function() {
+            return "each";
         };
     });
     //! example/lib/object/extend.js
@@ -87,8 +93,6 @@
             return !isNaN(val);
         };
     });
-    //! example/lib/directives/my-test.js
-    module.directive("myTest", function() {});
     for (var name in $$cache) {
         resolve(name, $$cache[name]);
     }
