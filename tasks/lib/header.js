@@ -49,9 +49,9 @@ var resolve = function (name, fn) {
             args.push(exports[injectionName] || $$internals[injectionName]);
         }
         if (fn.$internal) {
-            $$internals[name] = fn.apply(null, args) || true;
+            $$internals[name] = fn.apply(null, args) || name;
         } else {
-            exports[name] = fn.apply(null, args) || true;
+            exports[name] = fn.apply(null, args) || name;
         }
     }
 
