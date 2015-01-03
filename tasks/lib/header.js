@@ -34,7 +34,7 @@ var resolve = function (name, fn) {
     for (var i in injections) {
         injectionName = injections[i];
         if ($$cache[injectionName]) {
-            if ($$pending[injectionName]) {
+            if ($$pending.hasOwnProperty(injectionName)) {
                 throw new Error('Cyclical reference: "' + name + '" referencing "' + injectionName + '"');
             }
             resolve(injectionName, $$cache[injectionName]);

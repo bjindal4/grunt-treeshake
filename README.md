@@ -21,7 +21,7 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 
 ###Grunt options
 
-###aliases
+####aliases
 
 **Type:** Array of strings or String
 
