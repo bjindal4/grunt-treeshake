@@ -12,10 +12,8 @@ module.exports = function (grunt) {
                     import: ['ajax.*'],
                     report: 'verbose',
                     ignore: ['example/ignore.js'],
-                    //log: 'example/build/demo.log',
-                    aliases: ['directive'],
+                    log: 'example/logs/demo.log',
                     match: function (searchText) {
-                        //return [];
                         var camelCase = function (str) {
                             return str.replace(/-([a-z])/g, function (g) {
                                 return g[1].toUpperCase();
