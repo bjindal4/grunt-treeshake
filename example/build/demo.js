@@ -67,12 +67,6 @@
             return "http.jsonp";
         };
     });
-    //! example/lib/object/each.js
-    define("each", function() {
-        return function() {
-            return "each";
-        };
-    });
     //! example/lib/object/extend.js
     define("extend", [ "isDefined" ], function(isDefined) {
         return function() {
