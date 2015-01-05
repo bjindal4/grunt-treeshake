@@ -1,12 +1,23 @@
-------Sat Jan 03 2015 10:29:54 GMT-0700 (MST)------
+------Mon Jan 05 2015 05:19:46 GMT-0700 (MST)------
 
 Output:
 	example/build/demo.js 3.08k
 	example/build/demo.min.js 1.22k
 
+Definitions: 
+	each 
+	extend 
+	http 
+	http.jsonp 
+	isDefined 
+	isNumber 
 
-	   Definition		Reference				Source
-===================================================================================
-[ + ]  each 			example/ignore.js:1 	example/lib/object/each.js
-[   ]  extend
-[ - ]  http
+Included: 
+	example/lib/ajax/http.js - Gruntfile.js:*import ajax.* 
+	example/lib/ajax/jsonp.js - Gruntfile.js:*import ajax.* 
+	example/lib/object/extend.js - Gruntfile.js:*import object.* 
+	example/lib/validators/isDefined.js - example/lib/object/extend.js:2 
+	example/lib/validators/isNumber.js - example/app.js:5 
+
+Ignored: 
+	example/lib/object/each.js - example/ignore.js:1 
