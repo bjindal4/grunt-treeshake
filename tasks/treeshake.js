@@ -54,14 +54,17 @@ module.exports = function (grunt) {
     require('grunt-contrib-uglify/tasks/uglify')(grunt);
     require('grunt-contrib-clean/tasks/clean')(grunt);
 
-    var root = path.resolve('node_modules');
-    if (grunt.file.exists(root + '/grunt-treeshake')) {
-        header = headerWrap + grunt.file.read(root + '/grunt-treeshake/tasks/wrapper/header.js');
-        footer = grunt.file.read(root + '/grunt-treeshake/tasks/wrapper/footer.js') + footerWrap;
-    } else {
+    if (grunt.file.exists('./tasks/wrapper/header.js')) {
         header = headerWrap + grunt.file.read('./tasks/wrapper/header.js');
         footer = grunt.file.read('./tasks/wrapper/footer.js') + footerWrap;
+    } else {
+        var root = path.resolve('node_modules');
+        var findPath = root +  '/**/grunt-treeshake/tasks/treeshake.js';
+        var wrapperPath = grunt.file.expand(findPath).shift().split('treeshake.js').join('wrapper');
+        header = headerWrap + grunt.file.read(wrapperPath + '/header.js');
+        footer = grunt.file.read(wrapperPath + '/footer.js') + footerWrap;
     }
+
 
     /**
      * Remove comments from string to prevent accidental parsing
