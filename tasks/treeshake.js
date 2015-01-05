@@ -1,6 +1,8 @@
 'use strict';
 module.exports = function (grunt) {
 
+    var path = require('path');
+
     var headerWrap = '(function(exports, global) {\n\
     global["{$$namespace}"] = exports;\n';
 
@@ -45,18 +47,20 @@ module.exports = function (grunt) {
             print.apply(this, ["\t" + str + str2.grey]);
         };
 
-    grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-contrib-clean');
 
     var header, footer, cleanReservedWords, everythingElse;
     everythingElse = /[^\*\.\w\d]/g;
 
-    if (grunt.file.exists('./node_modules/grunt-treeshake/tasks/lib/header.js')) {
-        header = headerWrap + grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/header.js');
-        footer = grunt.file.read('./node_modules/grunt-treeshake/tasks/lib/footer.js') + footerWrap;
+    require('grunt-contrib-uglify/tasks/uglify')(grunt);
+    require('grunt-contrib-clean/tasks/clean')(grunt);
+
+    var root = path.resolve('node_modules');
+    if (grunt.file.exists(root + '/grunt-treeshake')) {
+        header = headerWrap + grunt.file.read(root + '/grunt-treeshake/tasks/wrapper/header.js');
+        footer = grunt.file.read(root + '/grunt-treeshake/tasks/wrapper/footer.js') + footerWrap;
     } else {
-        header = headerWrap + grunt.file.read('./tasks/lib/header.js');
-        footer = grunt.file.read('./tasks/lib/footer.js') + footerWrap;
+        header = headerWrap + grunt.file.read('./tasks/wrapper/header.js');
+        footer = grunt.file.read('./tasks/wrapper/footer.js') + footerWrap;
     }
 
     /**
