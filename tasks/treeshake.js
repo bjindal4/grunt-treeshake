@@ -484,7 +484,7 @@ module.exports = function (grunt) {
             }
 
             var clean = grunt.config.get('clean') || {};
-            clean[target] = '.tmp';
+            clean[target] = '.tmpTreeshake';
 
             grunt.config.set('uglify', uglify);
             grunt.task.run('uglify:' + target);
@@ -545,8 +545,8 @@ module.exports = function (grunt) {
         }
         // generate file.
         //print.apply(options, [files]);
-        writeSources(options.wrap, files, '.tmp/treeshake.js', options);
-        writeFiles(this.files[0].dest, ['.tmp/treeshake.js'], options, target);
+        writeSources(options.wrap, files, '.tmpTreeshake/treeshake.js', options);
+        writeFiles(this.files[0].dest, ['.tmpTreeshake/treeshake.js'], options, target);
         //if (printOptions.log !== consoleStr) {
         //    var content = '';
         //    printStr = '------' + new Date().toLocaleString() + "------\n" + printStr + "\n" + content;
