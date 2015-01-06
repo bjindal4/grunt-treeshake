@@ -1,3 +1,3 @@
-for (var name in $$cache) {
-    resolve(name, $$cache[name]);
+for (var name in cache) {
+    resolve(name, cache[name]);
 }

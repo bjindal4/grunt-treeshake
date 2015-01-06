@@ -1,63 +1,72 @@
-var $$cache = exports.$$cache || {};
-var $$internals = exports.$$internals || {};
-var $$pending = exports.$$pending || {};
+/* global exports */
+var $$ = function (name) {
+    if (!$$[name]) {
+        $$[name] = {};
+    }
+    return $$[name];
+};
+var cache = $$('c'); // cache
+var internals = $$('i'); // internals
+var pending = $$('p'); // pending
+exports.$$ = $$;
 
-var define = function (name) {
-    var args = Array.prototype.slice.call(arguments);
-    if (typeof args[1] === 'function') {
-        exports[name] = args[1]();
+var toArray = function(args) {
+    return Array.prototype.slice.call(args);
+};
+
+var _ = function (name) {
+    var args = toArray(arguments);
+    var val = args[1];
+    if (typeof val === 'function') {
+        this.c[name] = val();
     } else {
-        $$cache[name] = args[2];
-        $$cache[name].$inject = args[1];
-        $$cache[name].$internal = false;
+        cache[name] = args[2];
+        cache[name].$inject = val;
+        cache[name].$internal = this.i;
     }
 };
 
-var internal = function (name) {
-    var args = Array.prototype.slice.call(arguments);
-    if (typeof args[1] === 'function') {
-        $$internals[name] = args[1]();
-    } else {
-        $$cache[name] = args[2];
-        $$cache[name].$inject = args[1];
-        $$cache[name].$internal = true;
-    }
+var define = function () {
+    _.apply({i: false, c: exports}, toArray(arguments));
+};
+
+var internal = function () {
+    _.apply({i: true, c: internals}, toArray(arguments));
 };
 
 var resolve = function (name, fn) {
 
-    $$pending[name] = true;
+    pending[name] = true;
 
     var injections = fn.$inject;
     var args = [];
     var injectionName;
     for (var i in injections) {
-        injectionName = injections[i];
-        if ($$cache[injectionName]) {
-            if ($$pending.hasOwnProperty(injectionName)) {
-                throw new Error('Cyclical reference: "' + name + '" referencing "' + injectionName + '"');
+        if(injections.hasOwnProperty(i)) {
+            injectionName = injections[i];
+            if (cache[injectionName]) {
+                if (pending.hasOwnProperty(injectionName)) {
+                    throw new Error('Cyclical reference: "' + name + '" referencing "' + injectionName + '"');
+                }
+                resolve(injectionName, cache[injectionName]);
+                delete cache[injectionName];
             }
-            resolve(injectionName, $$cache[injectionName]);
-            delete $$cache[injectionName];
         }
-
     }
 
-    if (!exports[name] && !$$internals[name]) {
+    if (!exports[name] && !internals[name]) {
         for (var n in injections) {
             injectionName = injections[n];
-            args.push(exports[injectionName] || $$internals[injectionName]);
+            args.push(exports[injectionName] || internals[injectionName]);
         }
         if (fn.$internal) {
-            $$internals[name] = fn.apply(null, args) || name;
+            internals[name] = fn.apply(null, args) || name;
         } else {
             exports[name] = fn.apply(null, args) || name;
         }
     }
 
-    exports.$$cache = $$cache;
-    exports.$$internals = $$internals;
-    exports.$$pending = $$pending;
+    Object.defineProperty(exports, '$$', {enumerable: false, writable: false});
 
-    delete $$pending[name];
+    delete pending[name];
 };
