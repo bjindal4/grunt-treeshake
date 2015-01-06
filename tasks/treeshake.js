@@ -229,7 +229,7 @@ module.exports = function (grunt) {
         return dependencies;
     }
 
-    function filterHash(dependencies, paths, packages, wrap, options) {
+    function filterHash(dependencies, paths, packages, wrap, options, ignored) {
         paths = paths || [];
         var i, len = paths.length, expanded;
         dependencies = dependencies || {};
@@ -237,9 +237,9 @@ module.exports = function (grunt) {
             //print.apply(options, [paths[i]]);
             if (paths[i].indexOf('*') !== -1) {
                 expanded = grunt.file.expand(paths[i]);
-                filterHash(dependencies, expanded, packages, wrap, options);
+                filterHash(dependencies, expanded, packages, wrap, options, ignored);
             } else if (grunt.file.exists(paths[i])) {
-                findDependencies(paths[i], packages, dependencies, wrap, options);
+                findDependencies(paths[i], packages, dependencies, wrap, options, ignored);
             }
         }
         return dependencies;
@@ -263,16 +263,16 @@ module.exports = function (grunt) {
             // populates those on dependencies.
             findKeys('Gruntfile.js', options.import, packages, dependencies, wrap, options, 'import');
         }
-        filterHash(dependencies, paths, packages, wrap, options, 'file');
+        filterHash(dependencies, paths, packages, wrap, options, ignored);
         printReport("\nIncluded:");
         for (i in dependencies) {
             if (dependencies.hasOwnProperty(i) && !written[dependencies[i].src]) {
                 written[dependencies[i].src] = true;
-                if (ignored && ignored.hasOwnProperty(i)) {
-                    ignored[i].ignoreCount = (ignored[i].ignoreCount || 0) + 1;
-                } else {
+                //if (ignored && ignored.hasOwnProperty(i)) {
+                //    ignored[i].ignoreCount = (ignored[i].ignoreCount || 0) + 1;
+                //} else {
                     result.push(dependencies[i]);
-                }
+                //}
                 //printReport("\t" + dependencies[i].green);
             } else {
                 // this is for duplicates that are skipped because they has multiple references in multiple files.
@@ -332,7 +332,7 @@ module.exports = function (grunt) {
         return keys;
     }
 
-    function findDependencies(path, packages, dependencies, wrap, options) {
+    function findDependencies(path, packages, dependencies, wrap, options, ignored) {
         //grunt.log.writeln('##PATH##', path);
         var contents = '', i, len, rx, keys, len, split, keys;
 
@@ -361,7 +361,7 @@ module.exports = function (grunt) {
         }
         //print("keys", keys);
         if (keys) {
-            findKeys(path, keys, packages, dependencies, wrap, options, 'file');
+            findKeys(path, keys, packages, dependencies, wrap, options, 'file', ignored);
             //print(JSON.stringify(dependencies, null, 2));
             return dependencies;// dependencies
         }
@@ -390,7 +390,7 @@ module.exports = function (grunt) {
         }
     }
 
-    function getPackageMatch(fromPath, packages, statementOrKey, options, type, dependencies, findAdditionalDependencies) {
+    function getPackageMatch(fromPath, packages, statementOrKey, options, type, dependencies, findAdditionalDependencies, ignored) {
         var i, names, name, match, key = statementOrKey;
         dependencies = dependencies || {};
         if (key) {
@@ -398,12 +398,13 @@ module.exports = function (grunt) {
                 key = {value: key + ''};
             }
             match = packages[key.value];
-            if (match && !dependencies[key.value]) {
+            // ignored prevents it from looking up it or it's dependencies.
+            if (match && !dependencies[key.value] && (!ignored || !ignored[key.value])) {
                 key = makeKey(key.value, fromPath, match, options, type);
                 dependencies[key.value] = key;
                 //print("find dependencies in", match);
                 if (findAdditionalDependencies) {
-                    findDependencies(match, packages, dependencies, options.wrap, options, 'file');// do not pass force type to recursion. recursion should be of type file.
+                    findDependencies(match, packages, dependencies, options.wrap, options, 'file', ignored);// do not pass force type to recursion. recursion should be of type file.
                 }
             } else if (key.value && key.value.indexOf && key.value.indexOf('*') !== -1) {
                 // these will be strings not objects for keys.
@@ -415,9 +416,11 @@ module.exports = function (grunt) {
                         names = getFileNameFromContents(packages[i], options);
                         while (names && names.length) {
                             name = names.shift();
-                            dependencies[name] = makeKey(key.value, fromPath, packages[name], options, type);
-                            if (findAdditionalDependencies) {
-                                findDependencies(packages[i], packages, dependencies, options.wrap, options, 'file');// do not pass force type to recursion. recursion should be of type file.
+                            if (!ignored || !ignored[name]) {
+                                dependencies[name] = makeKey(key.value, fromPath, packages[name], options, type);
+                                if (findAdditionalDependencies) {
+                                    findDependencies(packages[i], packages, dependencies, options.wrap, options, 'file', ignored);// do not pass force type to recursion. recursion should be of type file.
+                                }
                             }
                         }
                     }
@@ -427,10 +430,10 @@ module.exports = function (grunt) {
         return key;
     }
 
-    function findKeys(path, keys, packages, dependencies, wrap, options, forceType) {
+    function findKeys(path, keys, packages, dependencies, wrap, options, forceType, ignored) {
         var len = keys.length, i;// match, i, names, j, key, name;
         for (i = 0; i < len; i += 1) {
-            keys[i] = getPackageMatch(path, packages, keys[i], options, forceType, dependencies, true);
+            keys[i] = getPackageMatch(path, packages, keys[i], options, forceType, dependencies, true, ignored);
         }
     }
 
@@ -580,7 +583,7 @@ module.exports = function (grunt) {
         // we build the whole package structure. We will filter it out later.
         packages = buildPackages(this.files, options);
         ignored = filterHash({}, options.ignore, packages, options.wrap, options);
-        var excluded = buildExclusions(options.exclude, packages, ignored, options);
+        buildExclusions(options.exclude, packages, ignored, options);
         files = filter(options.inspect, packages, options.wrap, options, ignored);
         if (options.report === 'verbose') {
             printExclusions(files, packages, ignored);

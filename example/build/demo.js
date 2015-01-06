@@ -71,7 +71,7 @@
         delete pending[name];
     };
     //! example/lib/ajax/http.js
-    internal("http", function() {
+    define("http", function() {
         return function() {
             return "http";
         };
@@ -89,6 +89,12 @@
             var result = isDefined();
             console.log(result);
             return "each";
+        };
+    });
+    //! example/lib/validators/isDefined.js
+    internal("isDefined", function() {
+        return function(val) {
+            return typeof val !== "undefined";
         };
     });
     for (var name in cache) {
