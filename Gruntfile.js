@@ -11,7 +11,9 @@ module.exports = function (grunt) {
                     inspect: ['example/app.js', 'example/templates/*.html', 'example/bogus.js'],
                     import: ['ajax.*'],
                     report: 'verbose',
-                    ignore: ['example/ignore.js'],
+                    ignore: ['example/ignore.js'],// looks in a file for used values and then doesn't include those.
+                    exclude: ['validators.*'],
+                    export: ['http'],
                     log: 'example/logs/demo.log',
                     match: function (searchText) {
                         var camelCase = function (str) {
