@@ -163,10 +163,10 @@ module.exports = function (grunt) {
     function getPath(path, options) {
         if (!cache[path]) {
             cache[path] = grunt.file.read(path);
-            if (options && options.export) {
+            if (options && options.export && options.export.length) {
                 cache[path] = cache[path].replace(getLookupRegExp(options), function (match) {
                     //grunt.log.writeln('replacing', match);
-                    var i, len = options.export, found = false;
+                    var i, len = options.export.length, found = false;
                     for (i = 0; i < len; i += 1) {
                         if (match.match(new RegExp('("|\')' + options.export[i] + '(\\1|$)'))) {
                             found = true;
