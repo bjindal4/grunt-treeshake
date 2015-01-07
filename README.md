@@ -21,13 +21,53 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 
 ###Grunt options
 
+####exclude
+
+**Type:** Array of definitions
+
+**Default:** *undefined*
+
+Will force ignore definitions and its dependencies from import. You can use either the name of the definition or use a directory with a wildcard. Note: if another file references the same definition, that definition will be imported. If you are excluding a particular definition. 
+
+**Example of excluding a definition**
+
+This will only ignore the "query" definition.
+
+	options: {
+		import: ["query.css"],
+		exclude: ["query"]
+	}
+
+**Example of excluding multiple definitions with a wildcard**
+
+This will ignore all query definitions except "query.css".
+
+	options: {
+		import: ["query.css"],
+		exclude: ["query.*"]
+	}
+
+
+####export
+
+**Type:** Array of definitions
+
+**Default:** *undefined*
+
+Exposes only the list of definitions to the api. If no list is provided, all definitions using define() will be added to the public interface.
+
+	options: {
+		export: ["http", "query"]
+	}
+
+
 ####ignore
 
 **Type:** Array of files or String
 
 **Default:** *undefined*
 
-Will exclude importing definitions from files that have definitions already defined. This is useful if you have a base file that already has some definitions to prevent including the same definitions twice.
+Will exclude importing definitions from files already containing definition. This helps prevent including the same definitions twice.
 
 	options: {
 		ignore: ["build/base.js"]
