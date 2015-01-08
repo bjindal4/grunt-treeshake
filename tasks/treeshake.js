@@ -275,7 +275,7 @@ module.exports = function (grunt) {
                 //if (ignored && ignored.hasOwnProperty(i)) {
                 //    ignored[i].ignoreCount = (ignored[i].ignoreCount || 0) + 1;
                 //} else {
-                    result.push(dependencies[i]);
+                result.push(dependencies[i]);
                 //}
                 //printReport("\t" + dependencies[i].green);
             } else {
@@ -363,7 +363,7 @@ module.exports = function (grunt) {
                 keys[i] = makeKey(keys[i], path, null, options);
             }
         }
-        //print("keys", keys);
+        //console.log("keys", keys);
         if (keys) {
             findKeys(path, keys, packages, dependencies, wrap, options, 'file', ignored);
             //print(JSON.stringify(dependencies, null, 2));
@@ -373,7 +373,7 @@ module.exports = function (grunt) {
 
     function makeKey(value, from, src, options, forceType) {
         var line = from !== 'Gruntfile' ? getLineNumber(value, from) : null;
-        var cleanWrap = new RegExp('\\b' + options.wrap + '\\.', 'gi');
+        var cleanWrap = new RegExp('[^\'"](?=' + options.wrap + ')\\w+\\.', 'gi');
         value = value.replace(cleanWrap, '');
         value = value.replace(cleanReservedWords, '');
         value = value.replace(everythingElse, '');
@@ -402,11 +402,13 @@ module.exports = function (grunt) {
                 key = {value: key + '', type: type};
             }
             match = packages[key.value];
+            console.log('VAL', key.value, match);
             // ignored prevents it from looking up it or it's dependencies.
             if (ignored && ignored[key.value] && type !== 'import') {
                 return null;
             }
             if (match && !dependencies[key.value]) {
+                console.log('\tFOUND');
                 key = makeKey(key.value, fromPath, match, options, type);
                 dependencies[key.value] = key;
                 //print("find dependencies in", match);

@@ -1,0 +1,2 @@
+define('util', function () {
+});

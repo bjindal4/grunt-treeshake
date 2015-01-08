@@ -6,10 +6,10 @@ module.exports = function (grunt) {
         treeshake: {
             demo: {
                 options: {
-                    wrap: 'demo',
+                    wrap: 'util',
                     minify: true,
                     inspect: ['example/app.js', 'example/templates/*.html', 'example/bogus.js'],
-                    import: ['ajax.*'],
+                    import: ['ajax.*', 'util'],
                     report: 'verbose',
                     ignore: ['example/ignore.js'],// looks in a file for used values and then doesn't include those.
                     exclude: ['validators.*'],

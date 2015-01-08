@@ -1,8 +1,8 @@
-------Tue Jan 06 2015 13:30:01 GMT-0700 (MST)------
+------Thu Jan 08 2015 14:10:29 GMT-0700 (MST)------
 
 Output:
-	example/build/demo.js 3.09k
-	example/build/demo.min.js 1.21k
+	example/build/demo.js 2.75k
+	example/build/demo.min.js 1.07k
 
 Definitions: 
 	each 
@@ -11,11 +11,13 @@ Definitions:
 	http.jsonp 
 	isDefined 
 	isNumber 
+	util 
+	util.test 
 
 Included: 
 	example/lib/ajax/http.js - Gruntfile.js:import ajax.* 
 	example/lib/ajax/jsonp.js - Gruntfile.js:import ajax.* 
-	example/lib/object/extend.js - example/app.js:2 
-	example/lib/validators/isDefined.js - example/lib/object/extend.js:2 
+	example/lib/object/util.js - Gruntfile.js:import util 
 
 Ignored: 
+	example/lib/object/extend.js 
