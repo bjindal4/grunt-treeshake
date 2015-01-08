@@ -1,5 +1,6 @@
 /*!
     import demo.object.*
+    import each
  */
 
 // Note: validators/isNumber will not be included because there is no reference either directly or through import

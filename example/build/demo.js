@@ -85,6 +85,14 @@
     });
     //! example/lib/object/util.js
     internal("util", function() {});
+    //! example/lib/object/each.js
+    internal("each", [ "util.test" ], function() {
+        return function() {
+            return "each";
+        };
+    });
+    //! example/lib/object/test.js
+    internal("util.test", function() {});
     for (var name in cache) {
         resolve(name, cache[name]);
     }

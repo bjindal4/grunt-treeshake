@@ -402,13 +402,11 @@ module.exports = function (grunt) {
                 key = {value: key + '', type: type};
             }
             match = packages[key.value];
-            console.log('VAL', key.value, match);
             // ignored prevents it from looking up it or it's dependencies.
             if (ignored && ignored[key.value] && type !== 'import') {
                 return null;
             }
             if (match && !dependencies[key.value]) {
-                console.log('\tFOUND');
                 key = makeKey(key.value, fromPath, match, options, type);
                 dependencies[key.value] = key;
                 //print("find dependencies in", match);
