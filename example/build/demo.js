@@ -93,6 +93,8 @@
     });
     //! example/lib/object/test.js
     internal("util.test", function() {});
+    //! example/lib/nothing.js
+    function nothing() {}
     for (var name in cache) {
         resolve(name, cache[name]);
     }

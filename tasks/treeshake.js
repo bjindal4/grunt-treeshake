@@ -12,6 +12,7 @@ module.exports = function (grunt) {
 
     var consoleStr = 'console',
         cache = {},
+        importPatterns = {},
         printStr = '',
         printOptions = {report: false},
         print = function () {
@@ -163,6 +164,8 @@ module.exports = function (grunt) {
     function getPath(path, options) {
         if (!cache[path]) {
             cache[path] = grunt.file.read(path);
+            // if it is defined in the export. Then make sure the internal function is changed to a define.
+            // otherwise if it is not in the export change to an internal
             if (options && options.export && options.export.length) {
                 cache[path] = cache[path].replace(getLookupRegExp(options), function (match) {
                     //grunt.log.writeln('replacing', match);
@@ -179,6 +182,8 @@ module.exports = function (grunt) {
                     return match;
                 });
             }
+
+            addPatterns(path);
         }
         return cache[path];
     }
@@ -193,6 +198,22 @@ module.exports = function (grunt) {
             matches[i] = matches[i].replace(everythingElse, '');
         }
         return matches;
+    }
+
+    // we get any pattern matches from the file contents.
+    // these will be used later on the inspect files to determine
+    // if this file should be included.
+    function addPatterns(path) {
+        var p = [], content = cache[path];
+        content.replace(/(\/\/!|\s+\*)\s+pattern\s+\/(\\\/|.*?)+\//gm, function (match, g1, g2) {
+            var rx = match.replace( /.*?pattern\s+\//, '').replace(/\/$/, '');
+            //console.log("\t" + rx);
+            p.push({match: match, rx: new RegExp(rx)});
+            return match;
+        });
+        if (p.length) {
+            importPatterns[path] = p;
+        }
     }
 
     /**
@@ -231,6 +252,14 @@ module.exports = function (grunt) {
     function buildExclusions(exclusions, packages, dependencies, options) {
         getPackageMatches('Gruntfile.js', packages, exclusions, options, 'exclude', dependencies, false);
         return dependencies;
+    }
+
+    function getPackageNameFromPath(packages, path) {
+        for (var i in packages) {
+            if (packages[i] === path) {
+                return i;
+            }
+        }
     }
 
     function filterHash(dependencies, paths, packages, wrap, options, ignored) {
@@ -272,11 +301,7 @@ module.exports = function (grunt) {
         for (i in dependencies) {
             if (dependencies.hasOwnProperty(i) && !written[dependencies[i].src]) {
                 written[dependencies[i].src] = true;
-                //if (ignored && ignored.hasOwnProperty(i)) {
-                //    ignored[i].ignoreCount = (ignored[i].ignoreCount || 0) + 1;
-                //} else {
                 result.push(dependencies[i]);
-                //}
                 //printReport("\t" + dependencies[i].green);
             } else {
                 // this is for duplicates that are skipped because they has multiple references in multiple files.
@@ -336,6 +361,31 @@ module.exports = function (grunt) {
         return keys;
     }
 
+    function addImportPatternMatchesToKeys(keys, path, packages, options) {
+        var i, j, len, pattern, name, match, key,
+            contents = getPath(path, options),
+            uncommented = removeComments(contents);
+        for (i in importPatterns) {
+            if (importPatterns.hasOwnProperty(i)) {
+                len = importPatterns[i].length;
+                for (j = 0; j < len; j += 1) {
+                    pattern = importPatterns[i][j];
+                    match = uncommented.match(pattern.rx);
+                    if (match) {
+                        name = getPackageNameFromPath(packages, i.trim());
+                        if (name) {
+                            key = makeKey(name, path, i, options, 'pattern');
+                            key.line = getLineNumber(pattern.match, i);
+                            keys.push(key);
+                        } else {
+                            grunt.log.writeln(("Missing package " + name + " (" + i + ")").red);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     function findDependencies(path, packages, dependencies, wrap, options, ignored) {
         //grunt.log.writeln('##PATH##', path);
         var contents = '', i, len, rx, keys, len, split, keys;
@@ -352,15 +402,22 @@ module.exports = function (grunt) {
         //cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
         keys = keys.concat(getAliasKeys(path, wrap) || []);
         keys = keys.concat(options.match(contents) || []);
+        addImportPatternMatchesToKeys(keys, path, packages, options);
         // now we need to clean up the keys.
         //grunt.log.writeln("keys", keys);
         for (i = 0; i < len; i += 1) {
-            if (keys[i].indexOf(',') !== -1) {
-                split = keys[i].split(',');
-                keys = keys.concat(split);
-                len = keys.length;
-            } else {
-                keys[i] = makeKey(keys[i], path, null, options);
+            // if it is already a key object leave it as is.
+            // the strings we still need to convert to key objects.
+            if (typeof keys[i] === 'string') {
+                // if it has commas in the string, there are multiples, split them and try again.
+                if (keys[i].indexOf(',') !== -1) {
+                    split = keys[i].split(',');
+                    keys = keys.concat(split);
+                    len = keys.length;
+                } else {
+                    // we now have a single item string. So just make the key, and replace it.
+                    keys[i] = makeKey(keys[i], path, null, options);
+                }
             }
         }
         //console.log("keys", keys);
@@ -482,17 +539,16 @@ module.exports = function (grunt) {
 
     function writeSources(wrap, files, dest, options) {
         // first we put our header on there for define and require.
-        var str = header, i, len;
-        //TODO: we couldn't think of a reason to keep this to force an include.
-        //len = options.includes.length, key;
-        //if (len) {
-        //    print("\nForced Includes:");
-        //    for (i = 0; i < len; i += 1) {
-        //        key = makeKey('include.' + i, 'Gruntfile.js', options.includes[i], options, 'include');
-        //        files.push(key);
-        //        printFileLine(key, 'yellow');
-        //    }
-        //}
+        var str = header, i, len, key;
+        len = options.includes.length, key;
+        if (len) {
+            print("\nForced Includes:");
+            for (i = 0; i < len; i += 1) {
+                key = makeKey('include.' + i, 'Gruntfile.js', options.includes[i], options, 'include');
+                files.push(key);
+                printFileLine(key, 'yellow');
+            }
+        }
         len = files.length;
         for (i = 0; i < len; i += 1) {
             str += '//! ' + files[i].src + "\n";
@@ -577,14 +633,20 @@ module.exports = function (grunt) {
         });
         printOptions.report = options.report;
         printOptions.log = options.log;
+        // import files that match the patterns.
         options.import = toArray(options.import);
-        options.ignore = toArray(options.ignore);// inspect files for excluded definitions
-        options.exclude = toArray(options.exclude);// filter out just like import filters in. reverse-import.
+        // inspect files for excluded definitions
+        options.ignore = toArray(options.ignore);
+        // filter out just like import filters in. reverse-import.
+        options.exclude = toArray(options.exclude);
+        // which files to look through to determine if there are dependencies that need to be included.
         options.inspect = toArray(options.inspect);
+        // determines what shows on the final api. If populated it will only make these items as defines, and everything else as internals so they don't show up on the final api.
         options.export = toArray(options.export);
         options.aliases = 'internal|define';
-        //TODO: we couldn't think of a reason to keep this to force an include.
-        //options.includes = toArray(options.includes);
+        // for including any file. Such as libs or something that doesn't fit our pattern. A force import if you will.
+        // this is a force import because it is a list of paths that just get written in.
+        options.includes = toArray(options.includes);
 
         cleanReservedWords = new RegExp('\\b(import|' + options.aliases + ')\\b', 'g');
         // we build the whole package structure. We will filter it out later.

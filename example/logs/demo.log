@@ -1,7 +1,7 @@
-------Thu Jan 08 2015 14:19:01 GMT-0700 (MST)------
+------Sat Jan 10 2015 12:43:52 GMT-0700 (MST)------
 
 Output:
-	example/build/demo.js 2.98k
+	example/build/demo.js 3.03k
 	example/build/demo.min.js 1.16k
 
 Definitions: 
@@ -11,6 +11,7 @@ Definitions:
 	http.jsonp 
 	isDefined 
 	isNumber 
+	myTest 
 	util 
 	util.test 
 
@@ -22,4 +23,8 @@ Included:
 	example/lib/object/test.js - example/lib/object/each.js:4 
 
 Ignored: 
+	example/lib/directives/my-test.js 
 	example/lib/object/extend.js 
+
+Forced Includes: 
+	example/lib/nothing.js - Gruntfile.js:include include.0 
