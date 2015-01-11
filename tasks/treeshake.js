@@ -197,6 +197,9 @@ module.exports = function (grunt) {
             matches[i] = matches[i].replace(cleanReservedWords, '');
             matches[i] = matches[i].replace(everythingElse, '');
         }
+        if (!matches) {
+            console.log("No defininition found".yellow, path);
+        }
         return matches;
     }
 
@@ -205,10 +208,17 @@ module.exports = function (grunt) {
     // if this file should be included.
     function addPatterns(path) {
         var p = [], content = cache[path];
-        content.replace(/(\/\/!|\s+\*)\s+pattern\s+\/(\\\/|.*?)+\//gm, function (match, g1, g2) {
-            var rx = match.replace( /.*?pattern\s+\//, '').replace(/\/$/, '');
-            //console.log("\t" + rx);
-            p.push({match: match, rx: new RegExp(rx)});
+        //var toggle = false;
+        //if (path.indexOf('toggleClass') !== -1) {
+        //    console.log(path.blue);
+        //    toggle = true;
+        //}
+        content.replace(/(\/\/!|\*)\s+pattern\s+\/(\\\/|.*?)+\//gim, function (match, g1, g2) {
+            var rx = match.replace(/.*?pattern\s+\//, '').replace(/\/$/, '');
+            //if (toggle) {
+            //    console.log(rx.green);
+            //}
+            p.push({match: match, rx: new RegExp(rx, 'gim')});
             return match;
         });
         if (p.length) {
@@ -224,18 +234,21 @@ module.exports = function (grunt) {
      */
     function buildPackages(files, options) {
         printVerbose('\nDefinitions:'.grey);
-        var packages = {}, len, i, j, path, names, name;
+        var packages = {}, len, i, j, path, names, name, src;
         var defs = [];
         for (i in files) {
-            len = files[i].src.length;
+            src = files[i].src;
+            len = src.length;
             for (j = 0; j < len; j += 1) {
-                path = files[i].src[j];
+                path = src[j];
+                //console.log(path.grey);
                 names = getFileNameFromContents(path, options);
                 while (names && names.length) {
                     name = names.shift();
                     if (packages.hasOwnProperty(name) && packages[name] !== path) {
                         grunt.log.writeln(("overriding definition '" + name + "'\n\tat: " + packages[name] + "\n\twith: " + path + "\n").yellow);
                     } else {
+                        //console.log("\t", name.blue);
                         defs.push(name);
                     }
                     packages[name] = path;
@@ -245,6 +258,7 @@ module.exports = function (grunt) {
         defs.sort();
         for (i in defs) {
             printVerbose("\t" + (defs[i] + '').grey);
+            //console.log("\t" + (defs[i] + '').red);
         }
         return packages;
     }
@@ -365,12 +379,25 @@ module.exports = function (grunt) {
         var i, j, len, pattern, name, match, key,
             contents = getPath(path, options),
             uncommented = removeComments(contents);
+        //! DO NOT DELETE THESE COMMENTS. They are helpful in debugging regex patterns in your files.
+        //var toggle = false;
+        //if (path.indexOf('circleMenu.js') !== -1) {
+        //    console.log(path.red);
+        //    toggle = true;
+        //}
         for (i in importPatterns) {
             if (importPatterns.hasOwnProperty(i)) {
                 len = importPatterns[i].length;
                 for (j = 0; j < len; j += 1) {
                     pattern = importPatterns[i][j];
                     match = uncommented.match(pattern.rx);
+                    //if (toggle && i.indexOf('toggleClass.js') !== -1) {
+                    //    console.log("before".blue);
+                    //    console.log("\t", pattern.rx);
+                    //    console.log("after".blue);
+                    //    console.log("\t", match);
+                    //    console.log(uncommented.grey, "\n\n");
+                    //}
                     if (match) {
                         name = getPackageNameFromPath(packages, i.trim());
                         if (name) {
@@ -389,7 +416,6 @@ module.exports = function (grunt) {
     function findDependencies(path, packages, dependencies, wrap, options, ignored) {
         //grunt.log.writeln('##PATH##', path);
         var contents = '', i, len, rx, keys, len, split, keys;
-
         if (grunt.file.exists(path)) {
             contents = getPath(path, options);
             contents = removeComments(contents);
@@ -403,6 +429,10 @@ module.exports = function (grunt) {
         keys = keys.concat(getAliasKeys(path, wrap) || []);
         keys = keys.concat(options.match(contents) || []);
         addImportPatternMatchesToKeys(keys, path, packages, options);
+        //if (path.indexOf('circle-menu') !== -1) {
+        //    console.log(path.red);
+        //    console.log(keys, "\n");
+        //}
         // now we need to clean up the keys.
         //grunt.log.writeln("keys", keys);
         for (i = 0; i < len; i += 1) {

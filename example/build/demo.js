@@ -93,6 +93,11 @@
     });
     //! example/lib/object/test.js
     internal("util.test", function() {});
+    //! example/lib/directives/my-test.js
+    //! pattern /my\-test(\s|\=|\>)/
+    internal("myTest", function() {
+        return function myTest() {};
+    });
     //! example/lib/nothing.js
     function nothing() {}
     for (var name in cache) {

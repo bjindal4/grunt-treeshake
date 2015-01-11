@@ -1,8 +1,8 @@
-------Sat Jan 10 2015 12:43:52 GMT-0700 (MST)------
+------Sat Jan 10 2015 18:14:37 GMT-0700 (MST)------
 
 Output:
-	example/build/demo.js 3.03k
-	example/build/demo.min.js 1.16k
+	example/build/demo.js 3.19k
+	example/build/demo.min.js 1.20k
 
 Definitions: 
 	each 
@@ -21,9 +21,9 @@ Included:
 	example/lib/object/util.js - Gruntfile.js:import util 
 	example/lib/object/each.js - example/app.js:3 
 	example/lib/object/test.js - example/lib/object/each.js:4 
+	example/lib/directives/my-test.js - example/app.js: 
 
 Ignored: 
-	example/lib/directives/my-test.js 
 	example/lib/object/extend.js 
 
 Forced Includes: 
