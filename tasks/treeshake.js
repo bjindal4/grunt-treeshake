@@ -375,38 +375,35 @@ module.exports = function (grunt) {
         return keys;
     }
 
-    function addImportPatternMatchesToKeys(keys, path, packages, options) {
-        var i, j, len, pattern, name, match, key,
+    // it needs to match all patterns in that file to be included.
+    function matchesPatterns(pattern, path, options) {
+        // path is passed for debugging. When you need to debug regex then use path.indexOf('filename.js') !== -1.
+        // it will make your output much smaller.
+        var i, len = pattern.length, found = false,
             contents = getPath(path, options),
             uncommented = removeComments(contents);
-        //! DO NOT DELETE THESE COMMENTS. They are helpful in debugging regex patterns in your files.
-        //var toggle = false;
-        //if (path.indexOf('circleMenu.js') !== -1) {
-        //    console.log(path.red);
-        //    toggle = true;
-        //}
+        for(i = 0; i < len; i += 1) {
+            found = pattern[i].rx.test(uncommented);
+            if (!found) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function addImportPatternMatchesToKeys(keys, path, packages, options) {
+        var i, pattern, name, key;
         for (i in importPatterns) {
             if (importPatterns.hasOwnProperty(i)) {
-                len = importPatterns[i].length;
-                for (j = 0; j < len; j += 1) {
-                    pattern = importPatterns[i][j];
-                    match = uncommented.match(pattern.rx);
-                    //if (toggle && i.indexOf('toggleClass.js') !== -1) {
-                    //    console.log("before".blue);
-                    //    console.log("\t", pattern.rx);
-                    //    console.log("after".blue);
-                    //    console.log("\t", match);
-                    //    console.log(uncommented.grey, "\n\n");
-                    //}
-                    if (match) {
-                        name = getPackageNameFromPath(packages, i.trim());
-                        if (name) {
-                            key = makeKey(name, path, i, options, 'pattern');
-                            key.line = getLineNumber(pattern.match, i);
-                            keys.push(key);
-                        } else {
-                            grunt.log.writeln(("Missing package " + name + " (" + i + ")").red);
-                        }
+                if (matchesPatterns(importPatterns[i], path, options)) {
+                    name = getPackageNameFromPath(packages, i.trim());
+                    if (name) {
+                        key = makeKey(name, path, i, options, 'pattern');
+                        // use the first pattern match to get the line number.
+                        key.line = getLineNumber(importPatterns[i][0].match, i);
+                        keys.push(key);
+                    } else {
+                        grunt.log.writeln(("Missing package " + name + " (" + i + ")").red);
                     }
                 }
             }
