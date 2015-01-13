@@ -11,3 +11,4 @@ var result = jsonp();
 console.log('result', result);
 //console.log(stuff.isNumber);
 stuff['isNumber'];
+'<div my-test></div>';
