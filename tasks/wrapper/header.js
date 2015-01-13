@@ -1,5 +1,6 @@
 /* global exports */
-var $$ = function (name) {
+// treeshake-header:start //
+var $$ = exports.$$ || function (name) {
     if (!$$[name]) {
         $$[name] = {};
     }
@@ -70,3 +71,5 @@ var resolve = function (name, fn) {
 
     delete pending[name];
 };
+// treeshake-header:end //
+
