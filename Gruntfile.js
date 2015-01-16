@@ -14,9 +14,7 @@ module.exports = function (grunt) {
                     //ignore: ['example/ignore.js'],// looks in a file for used values and then doesn't include those.
                     exclude: ['validators.*'],
                     export: [
-                        'http',
-                        'http.json:jsonp',
-                        'http.json'
+                        'http as xp'
                     ],
                     log: 'example/logs/demo.log',
                     includes: ['example/lib/nothing.js'],

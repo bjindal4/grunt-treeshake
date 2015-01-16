@@ -71,7 +71,7 @@
         delete pending[name];
     };
     //! example/lib/ajax/http.js
-    define("http", function() {
+    internal("http", function() {
         return function() {
             return "http";
         };
@@ -100,6 +100,9 @@
     });
     //! example/lib/nothing.js
     function nothing() {}
+    define("xp", [ "http" ], function(fn) {
+        return fn;
+    });
     for (var name in cache) {
         resolve(name, cache[name]);
     }

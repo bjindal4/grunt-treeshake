@@ -12,6 +12,7 @@ module.exports = function (grunt) {
 
     var consoleStr = 'console',
         cache = {},
+        exportAs = {},
         importPatterns = {},
         printStr = '',
         printOptions = {report: false},
@@ -169,9 +170,18 @@ module.exports = function (grunt) {
             if (options && options.export && options.export.length) {
                 cache[path] = cache[path].replace(getLookupRegExp(options), function (match) {
                     //grunt.log.writeln('replacing', match);
-                    var i, len = options.export.length, found = false;
+                    var i, len = options.export.length, found = false,
+                        exportParts;
                     for (i = 0; i < len; i += 1) {
-                        if (match.match(new RegExp('("|\')' + options.export[i] + '(\\1|$)'))) {
+                        if (options.export[i] && options.export[i].indexOf(' as ') !== -1) {
+                            // the exportAs will run after it writes all of the files.
+                            // it then will define the alias for an ' as '.
+                            exportParts = options.export[i].split(' as ');
+                            exportAs[exportParts[0].trim()] = exportParts[1].trim();
+                            // we don't want the exports to become empty or it will stop processing.
+                            // so just make the string unmatchable so all are changed to internal.
+                            options.export[i] = '##REPLACE WITH INTERNAL##';
+                        } else if (match.match(new RegExp('("|\')' + options.export[i] + '(\\1|$)'))) {
                             found = true;
                         }
                     }
@@ -382,7 +392,7 @@ module.exports = function (grunt) {
         var i, len = pattern.length, found = false,
             contents = getPath(path, options),
             uncommented = removeComments(contents);
-        for(i = 0; i < len; i += 1) {
+        for (i = 0; i < len; i += 1) {
             found = pattern[i].rx.test(uncommented);
             if (!found) {
                 return false;
@@ -580,6 +590,13 @@ module.exports = function (grunt) {
         for (i = 0; i < len; i += 1) {
             str += '//! ' + files[i].src + "\n";
             str += getPath(files[i].src);
+        }
+        // these exports will force external definition alias references.
+        for (i in exportAs) {
+            console.log(('export ' + i + ' as ' + exportAs[i]).green);
+            str += "define('" + exportAs[i] + "', ['" + i + "'], function(fn) {\n" +
+                "    return fn;\n" +
+                "});\n";
         }
         str += footer;
         str = str.split('{$$namespace}').join(wrap);
