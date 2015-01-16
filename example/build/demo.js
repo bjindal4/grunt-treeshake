@@ -1,6 +1,6 @@
 (function(exports, global) {
     global["util"] = exports;
-    var $$ = function(name) {
+    var $$ = exports.$$ || function(name) {
         if (!$$[name]) {
             $$[name] = {};
         }

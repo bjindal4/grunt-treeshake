@@ -1,8 +1,8 @@
-------Fri Jan 16 2015 08:53:46 GMT-0700 (MST)------
+------Fri Jan 16 2015 08:55:04 GMT-0700 (MST)------
 
 Output:
-	example/build/demo.js 3.26k
-	example/build/demo.min.js 1.24k
+	example/build/demo.js 3.27k
+	example/build/demo.min.js 1.25k
 
 Definitions: 
 	each 
