@@ -422,15 +422,23 @@ module.exports = function (grunt) {
 
     function findDependencies(path, packages, dependencies, wrap, options, ignored) {
         //grunt.log.writeln('##PATH##', path);
-        var contents = '', i, len, rx, keys, len, split, keys;
+        var contents = '', i, len, rx, rx2, keys, len, split, keys;
         if (grunt.file.exists(path)) {
             contents = getPath(path, options);
             contents = removeComments(contents);
+        } else {
+            console.log("cannot find path", path.yellow);
         }
 
-        //print(contents);
-        rx = new RegExp('((' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?|(' + options.aliases + ')([\\W\\s]+(("|\')[\\w|\\.]+))+)', 'gim');
+        //console.log(contents.grey);
+        //rx = new RegExp('((' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?|(' + options.aliases + ')([\\W\\s]+(("|\')[\\w|\\.]+))+)', 'gim');
+        rx = new RegExp('(' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?', 'gm');
+        //console.log(rx);
         keys = contents.match(rx) || [];
+        //console.log(keys);
+        rx2 = new RegExp('(' + options.aliases + ')\\(("|\')(\\w\\.?)+\\2,\\s(\\[.*\\])?', 'gm');
+        keys = keys.concat(contents.match(rx2) || []);
+        //console.log(keys);
         len = keys && keys.length || 0;
         //cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
         keys = keys.concat(getAliasKeys(path, wrap) || []);
