@@ -443,7 +443,9 @@ module.exports = function (grunt) {
         //cleanWrap = new RegExp('\\b' + wrap + '\\.', 'gi');
         keys = keys.concat(getAliasKeys(path, wrap) || []);
         keys = keys.concat(options.match(contents) || []);
-        addImportPatternMatchesToKeys(keys, path, packages, options);
+        if (!options.ignorePatterns) {
+            addImportPatternMatchesToKeys(keys, path, packages, options);
+        }
         //if (path.indexOf('circle-menu') !== -1) {
         //    console.log(path.red);
         //    console.log(keys, "\n");

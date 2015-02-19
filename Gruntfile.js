@@ -8,6 +8,7 @@ module.exports = function (grunt) {
                 options: {
                     wrap: 'util',
                     minify: true,
+                    ignorePatterns: false,
                     inspect: ['example/app.js', 'example/templates/*.html', 'example/bogus.js'],
                     import: ['ajax.*', 'util'],
                     report: 'verbose',
