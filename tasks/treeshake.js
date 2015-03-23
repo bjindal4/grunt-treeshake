@@ -605,8 +605,8 @@ module.exports = function (grunt) {
         for (i in exportAs) {
             console.log(('export ' + i + ' as ' + exportAs[i]).green);
             str += "define('" + exportAs[i] + "', ['" + i + "'], function(fn) {\n" +
-                "    return fn;\n" +
-                "});\n";
+            "    return fn;\n" +
+            "});\n";
         }
         str += footer;
         str = str.split('{$$namespace}').join(wrap);
@@ -635,9 +635,6 @@ module.exports = function (grunt) {
 
             if (options.minify) {
                 uglify[target + '_min'] = {
-                    options: {
-                        wrap: options.wrap
-                    },
                     files: buildMinFiles
                 };
             }
