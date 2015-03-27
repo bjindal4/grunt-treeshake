@@ -1,3 +1,4 @@
+//my banner
 (function(exports, global) {
     global["util"] = exports;
     var $$ = exports.$$ || function(name) {
