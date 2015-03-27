@@ -6,7 +6,7 @@ module.exports = function (grunt) {
         treeshake: {
             demo: {
                 options: {
-                    banner: '//my banner',
+                    banner: '//my banner\n',
                     wrap: 'util',
                     minify: true,
                     ignorePatterns: false,

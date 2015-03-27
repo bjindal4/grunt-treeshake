@@ -624,7 +624,7 @@ module.exports = function (grunt) {
             var uglify = grunt.config.get('uglify') || {};
             uglify[target] = {
                 options: {
-                    banner: (options.banner || '') + "\n",
+                    banner: options.banner || '',
                     mangle: false,
                     compress: false,
                     preserveComments: 'some',
@@ -637,7 +637,7 @@ module.exports = function (grunt) {
             if (options.minify) {
                 uglify[target + '_min'] = {
                     options: {
-                        banner: (options.banner || '') + "\n"
+                        banner: options.banner || ''
                     },
                     files: buildMinFiles
                 };
