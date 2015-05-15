@@ -635,8 +635,14 @@ module.exports = function (grunt) {
             };
 
             if (options.minify) {
+                var destRoot = dest.split('/');
+                destRoot.pop();
+                destRoot = destRoot.join('/');
                 uglify[target + '_min'] = {
                     options: {
+                        sourceMap: true,
+                        sourceMapRoot: destRoot,
+                        sourceMappingUrl: dest,
                         banner: options.banner || ''
                     },
                     files: buildMinFiles
