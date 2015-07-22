@@ -629,7 +629,8 @@ module.exports = function (grunt) {
                     compress: false,
                     preserveComments: 'some',
                     beautify: true,
-                    exportAll: false
+                    exportAll: false,
+                    sourceMap: false
                 },
                 files: buildFiles
             };
