@@ -36,11 +36,26 @@ module.exports = function (grunt) {
                     //},
                 },
                 files: {
-                    'example/build/demo.js': ['example/lib/**/**.js', 'example/lib/**/**.js']
+                    'example/build/demo.js': ['example/lib/**/**.js']
+                }
+            },
+            demo2: {
+                options: {
+                    banner: '// ## BANNER HERE ###\n',
+                    wrap: 'demo',
+                    minify: true,
+                    report: 'verbose',
+                    ignorePatterns: true,
+                    import: ['app'],
+                    log: 'example/logs/demo2.log',
+                    includes: ['example/lib/nothing.js']
+                },
+                files: {
+                    'example/build/demo2.js': ['example/src/*.js', 'example/lib/**/*.js']
                 }
             }
         }
     });
 
-    grunt.registerTask('default', 'treeshake');
+    grunt.registerTask('default', 'treeshake:demo2');
 };
