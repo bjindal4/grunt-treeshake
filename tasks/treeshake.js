@@ -6,30 +6,44 @@ var toArray = require('./utils/toArray');
 
 module.exports = function (grunt) {
 
-    require('grunt-contrib-uglify/tasks/uglify')(grunt);
-    require('grunt-contrib-clean/tasks/clean')(grunt);
+    var gruntLogHeader = grunt.log.header;
+    grunt.log.header = function () {
+    };
 
+    // :: INIT TASK DEPS :: //
+    require('grunt-contrib-uglify/tasks/uglify')(grunt);
+
+    // :: CONSTANTS :: //
     var NEWLINE = '\n';
     var TAB = '\t';
     var CONSOLE = 'console';
 
+    var PRINT_VERBOSE = 'print::verbose';
+    var PRINT_REPORT = 'print::report';
+    var PRINT_FILE = 'print::file';
+    var PRINT_LINE = 'print::line';
+    var PRINT_IGNORED = 'print:ignored';
+    var PRINT_FINALIZE = 'print::finalize';
+
+    var TMP_FILE = '.tmpTreeshake/treeshake.js';
+
     var cache = {};
     var exportAs = {};
     var importPatterns = {};
-    //var printOptions = printer(grunt);
-    var header, footer, cleanReservedWords, everythingElse;
-    everythingElse = /[^\*\.\w\d]/g;
+    var header, footer, cleanReservedWords;
+    var everythingElse = /[^\*\.\w\d]/g;
+    var readFile = grunt.file.read;
 
-    header = grunt.file.read(__dirname + '/files/wrap_header.js') + grunt.file.read(__dirname + '/files/treeshake_header.js');
-    footer = grunt.file.read(__dirname + '/files/treeshake_footer.js') + grunt.file.read(__dirname + '/files/wrap_footer.js');
+    header = readFile(__dirname + '/files/wrap_header.js') + readFile(__dirname + '/files/treeshake_header.js');
+    footer = readFile(__dirname + '/files/treeshake_footer.js') + readFile(__dirname + '/files/wrap_footer.js');
 
     function getLookupRegExp(options) {
         return new RegExp('(' + options.aliases + ')([\\W\\s]+(("|\')[\\w|\\.]+\\3))+', 'gim')
     }
 
-    function getPath(path, options) {
+    function getPath(path) {
         if (!cache[path]) {
-            cache[path] = grunt.file.read(path);
+            cache[path] = readFile(path);
             addPatterns(path);
         }
         return cache[path];
@@ -44,9 +58,9 @@ module.exports = function (grunt) {
             matches[i] = matches[i].replace(cleanReservedWords, '');
             matches[i] = matches[i].replace(everythingElse, '');
         }
-        if (!matches) {
-            console.log("No defininition found".yellow, path);
-        }
+        //if (!matches) {
+        //    console.log(NO_DEF_FOUND.yellow, path);
+        //}
         return matches;
     }
 
@@ -80,8 +94,9 @@ module.exports = function (grunt) {
      * @returns {{}}
      */
     function buildPackages(files, options) {
-        emitter.fire('print::verbose', [NEWLINE + 'Definitions:'.grey]);
-        var packages = {}, len, i, j, path, names, name, src;
+        emitter.fire(PRINT_VERBOSE, [NEWLINE + 'Definitions:']);
+        var packages = {};
+        var len, i, j, path, names, name, src;
         var defs = [];
         for (i in files) {
             src = files[i].src;
@@ -94,7 +109,6 @@ module.exports = function (grunt) {
                     if (packages.hasOwnProperty(name) && packages[name] !== path) {
                         grunt.log.writeln(("overriding definition '" + name + NEWLINE + TAB + "'at: " + packages[name] + "\n\twith: " + path + "\n").yellow);
                     } else {
-                        //console.log("\t", name.blue);
                         defs.push(name);
                     }
                     packages[name] = path;
@@ -103,7 +117,7 @@ module.exports = function (grunt) {
         }
         defs.sort();
         for (i in defs) {
-            emitter.fire('print::verbose', [TAB + (defs[i] + '').grey]);
+            emitter.fire(PRINT_VERBOSE, [TAB + (defs[i] + '').blue]);
         }
         return packages;
     }
@@ -126,7 +140,6 @@ module.exports = function (grunt) {
         var i, len = paths.length, expanded;
         dependencies = dependencies || {};
         for (i = 0; i < len; i += 1) {
-            //print.apply(options, [paths[i]]);
             if (paths[i].indexOf('*') !== -1) {
                 expanded = grunt.file.expand(paths[i]);
                 filterHash(dependencies, expanded, packages, wrap, options, ignored);
@@ -156,7 +169,7 @@ module.exports = function (grunt) {
             findKeys('Gruntfile.js', options.import, packages, dependencies, wrap, options, 'import', ignored);
         }
         filterHash(dependencies, paths, packages, wrap, options, ignored);
-        emitter.fire('print::report', NEWLINE + 'Included:');
+        emitter.fire(PRINT_REPORT, NEWLINE + 'Included:');
         for (i in dependencies) {
             if (dependencies.hasOwnProperty(i) && !written[dependencies[i].src]) {
                 written[dependencies[i].src] = true;
@@ -169,7 +182,7 @@ module.exports = function (grunt) {
 
         result.sort();
         for (i in result) {
-            emitter.fire('print::file', result[i], {color: 'green'});
+            emitter.fire(PRINT_FILE, result[i], {color: 'green'});
         }
 
         return result;
@@ -187,7 +200,7 @@ module.exports = function (grunt) {
         return '';
     }
 
-    function getRx(alias) {
+    function createRegExp(alias) {
         return new RegExp('\\b' + alias + '(\\.\\w+|\\[("|\')\\w+\\2\\])+', 'gm');
     }
 
@@ -212,7 +225,7 @@ module.exports = function (grunt) {
         if (aliases && (len = aliases.length)) {
             // we found aliases so we need to check for matches and add them to the keys.
             for (i = 0; i < len; i += 1) {
-                rx = getRx(aliases[i]);
+                rx = createRegExp(aliases[i]);
                 contents.replace(rx, handleMatch);
             }
         }
@@ -289,7 +302,6 @@ module.exports = function (grunt) {
                 }
             }
         }
-        //console.log("keys", keys);
         if (keys) {
             findKeys(path, keys, packages, dependencies, wrap, options, 'file', ignored);
             return dependencies;// dependencies
@@ -366,8 +378,8 @@ module.exports = function (grunt) {
     }
 
     function printExclusions(files, packages, ignored) {
-        emitter.fire('print::line', NEWLINE + "Ignored:".grey);
-        emitter.fire('print::ignored', ignored);
+        emitter.fire(PRINT_LINE, NEWLINE + "Ignored:");
+        emitter.fire(PRINT_IGNORED, ignored);
         var len = files.length, i, j, found, result = [];
         for (i in packages) {
             if (packages.hasOwnProperty(i)) {
@@ -386,7 +398,7 @@ module.exports = function (grunt) {
 
         result.sort();
         for (i in result) {
-            emitter.fire('print::line', TAB + result[i].grey);
+            emitter.fire(PRINT_LINE, TAB + result[i].yellow);
         }
     }
 
@@ -395,11 +407,11 @@ module.exports = function (grunt) {
         var str = header, i, len, key;
         len = options.includes.length, key;
         if (len) {
-            emitter.fire('print::print', NEWLINE + 'Forced Includes:');
+            emitter.fire(PRINT_LINE, NEWLINE + 'Forced Includes:');
             for (i = 0; i < len; i += 1) {
                 key = makeKey('include.' + i, 'Gruntfile.js', options.includes[i], options, 'include');
                 files.push(key);
-                emitter.fire('print::file', key, {color: 'yellow'});
+                emitter.fire(PRINT_FILE, key, {color: 'yellow'});
             }
         }
         len = files.length;
@@ -430,7 +442,7 @@ module.exports = function (grunt) {
             var uglify = grunt.config.get('uglify') || {};
             uglify[target] = {
                 options: {
-                    banner: options.banner || '',
+                    banner: options.banner ? options.banner + NEWLINE : '',
                     mangle: false,
                     compress: false,
                     preserveComments: 'some',
@@ -450,14 +462,11 @@ module.exports = function (grunt) {
                         sourceMap: true,
                         sourceMapRoot: destRoot,
                         sourceMappingUrl: dest,
-                        banner: options.banner || ''
+                        banner: options.banner ? options.banner + NEWLINE : '',
                     },
                     files: buildMinFiles
                 };
             }
-
-            var clean = grunt.config.get('clean') || {};
-            clean[target] = '.tmpTreeshake';
 
             grunt.config.set('uglify', uglify);
             grunt.task.run('uglify:' + target);
@@ -465,14 +474,12 @@ module.exports = function (grunt) {
                 grunt.task.run('uglify:' + target + '_min');
             }
 
-            grunt.config.set('clean', clean);
-            grunt.task.run('clean:' + target);
-
             var filesize = {};
             filesize[target] = {
                 path: dest,
                 pathMin: dest.substr(0, dest.length - 3) + '.min.js',
-                log: options.log
+                log: options.log,
+                gruntLogHeader: options.gruntLogHeader
             };
             grunt.config.set('treeshake-filesize', filesize);
             grunt.task.run('treeshake-filesize:' + target);
@@ -496,20 +503,14 @@ module.exports = function (grunt) {
         printer.setGrunt(grunt);
         printer.setOptions(options);
 
-        // import files that match the patterns.
-        options.import = toArray(options.import);
-        // inspect files for excluded definitions
-        options.ignore = toArray(options.ignore);
-        // filter out just like import filters in. reverse-import.
-        options.exclude = toArray(options.exclude);
-        // which files to look through to determine if there are dependencies that need to be included.
-        options.inspect = toArray(options.inspect);
-        // determines what shows on the final api. If populated it will only make these items as defines, and everything else as internals so they don't show up on the final api.
-        options.export = toArray(options.export);
+
+        options.import = toArray(options.import); // import files that match the patterns.
+        options.ignore = toArray(options.ignore); // inspect files for excluded definitions
+        options.exclude = toArray(options.exclude); // filter out just like import filters in. reverse-import.
+        options.inspect = toArray(options.inspect); // which files to look through to determine if there are dependencies that need to be included.
+        options.export = toArray(options.export); // determines what shows on the final api. If populated it will only make these items as defines, and everything else as internals so they don't show up on the final api.
         options.aliases = 'internal|define';
-        // for including any file. Such as libs or something that doesn't fit our pattern. A force import if you will.
-        // this is a force import because it is a list of paths that just get written in.
-        options.includes = toArray(options.includes);
+        options.includes = toArray(options.includes); // for including any file. Such as libs or something that doesn't fit our pattern. A force import if you will. This is a force import because it is a list of paths that just get written in.
 
         cleanReservedWords = new RegExp('\\b(import|' + options.aliases + ')\\b', 'g');
         // we build the whole package structure. We will filter it out later.
@@ -521,11 +522,13 @@ module.exports = function (grunt) {
             printExclusions(files, packages, ignored);
         }
         // generate file.
-        writeSources(options.wrap, files, '.tmpTreeshake/treeshake.js', options);
-        writeFiles(this.files[0].dest, ['.tmpTreeshake/treeshake.js'], options, target);
+        writeSources(options.wrap, files, TMP_FILE, options);
+        writeFiles(this.files[0].dest, [TMP_FILE], options, target);
     });
 
-    grunt.registerMultiTask('treeshake-filesize', 'A Grunt plugin for logging filesize.', function () {
-        emitter.fire('print::finalize', this.data);
+    grunt.registerMultiTask('treeshake-filesize', 'A Grunt plugin for logging file size.', function () {
+        grunt.file.delete('.tmpTreeshake');
+        grunt.log.header = gruntLogHeader;
+        emitter.fire(PRINT_FINALIZE, this.data);
     });
 };

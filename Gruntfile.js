@@ -41,7 +41,7 @@ module.exports = function (grunt) {
             },
             demo2: {
                 options: {
-                    banner: '// ## BANNER HERE ###\n',
+                    banner: '// ## BANNER HERE ###',
                     wrap: 'demo',
                     minify: true,
                     report: 'verbose',

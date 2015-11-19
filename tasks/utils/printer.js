@@ -8,6 +8,13 @@ var printStr = '';
 
 var grunt, options = {report: false};
 
+var PRINT_VERBOSE = 'print::verbose';
+var PRINT_REPORT = 'print::report';
+var PRINT_FILE = 'print::file';
+var PRINT_LINE = 'print::line';
+var PRINT_IGNORED = 'print:ignored';
+var PRINT_FINALIZE = 'print::finalize';
+
 var log = function () {
     var args = Array.prototype.slice.call(arguments);
     if (options.log === CONSOLE) {
@@ -15,26 +22,25 @@ var log = function () {
     } else {
         for (var i = 0; i < args.length; i++) {
             printStr += grunt.log.uncolor(args[i]) + " ";
-            //printStr += args[i].toString();
         }
         printStr += NEWLINE;
     }
 };
 
-emitter.on('print::report', function (evt, strings) {
+emitter.on(PRINT_REPORT, function (evt, strings) {
     if (options.report) {
         log.apply(null, toArray(strings));
     }
 });
 
-emitter.on('print::verbose', function (evt, strings) {
+emitter.on(PRINT_VERBOSE, function (evt, strings) {
     if (options.report === 'verbose') {
         log.apply(null, toArray(strings));
     }
 });
 
 
-emitter.on('print::file', function (evt, fileInfo, options) {
+emitter.on(PRINT_FILE, function (evt, fileInfo, options) {
     fileInfo.from = fileInfo.from || 'Gruntfile.js';
     var str = fileInfo.src[options.color];
     var str2 = ' - ' + fileInfo.from;
@@ -46,24 +52,22 @@ emitter.on('print::file', function (evt, fileInfo, options) {
     log.apply(null, toArray(TAB + str + str2.grey));
 });
 
-emitter.on('print::line', function (evt, strings) {
+emitter.on(PRINT_LINE, function (evt, strings) {
     log.apply(null, toArray(strings));
 });
 
-emitter.on('print:ignored', function (evt, ignored) {
+emitter.on(PRINT_IGNORED, function (evt, ignored) {
     var i;
     if (ignored) {
         for (i in ignored) {
             if (ignored[i].ignoreCount) {
-                emitter.fire('print::file', ignored[i], {color: 'grey'});
+                emitter.fire(PRINT_FILE, ignored[i], {color: 'grey'});
             }
         }
     }
 });
 
-emitter.on('print::finalize', function (evt, data) {
-    cache = {};
-
+emitter.on(PRINT_FINALIZE, function (evt, data) {
     function getSize(path) {
         if (grunt.file.exists(path)) {
             var stat = fs.statSync(path);
@@ -72,10 +76,10 @@ emitter.on('print::finalize', function (evt, data) {
     }
 
     if (options.log === CONSOLE) {
-        emitter.fire('print::line', NEWLINE + "Output:");
-        emitter.fire('print::line', TAB + data.path.blue, (getSize(data.path) + 'k').green);
+        emitter.fire(PRINT_LINE, NEWLINE + "Output:");
+        emitter.fire(PRINT_LINE, TAB + data.path.blue, (getSize(data.path) + 'k').green);
         if (data.pathMin) {
-            emitter.fire('print::line', TAB + data.pathMin.blue, (getSize(data.pathMin) + 'k').green);
+            emitter.fire(PRINT_LINE, TAB + data.pathMin.blue, (getSize(data.pathMin) + 'k').green);
         }
     } else {
         var output = "Output:" + NEWLINE + TAB + data.path + " " + getSize(data.path) + 'k' + NEWLINE;
@@ -83,7 +87,6 @@ emitter.on('print::finalize', function (evt, data) {
             output += TAB + data.pathMin + " " + getSize(data.pathMin) + 'k' + NEWLINE;
         }
 
-        //emitter.fire('print::')
         printStr = '------' + new Date().toLocaleString() + "------" + NEWLINE + NEWLINE + output + printStr;
 
         grunt.file.write(options.log, printStr);
