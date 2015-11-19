@@ -57,5 +57,7 @@ module.exports = function (grunt) {
         }
     });
 
+    grunt.loadNpmTasks('grunt-release');
+
     grunt.registerTask('default', 'treeshake:demo2');
 };
