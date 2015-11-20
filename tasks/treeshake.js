@@ -17,6 +17,7 @@ module.exports = function (grunt) {
     var NEWLINE = '\n';
     var TAB = '\t';
     var CONSOLE = 'console';
+    var ALIASES = 'define|internal';
 
     var PRINT_VERBOSE = 'print::verbose';
     var PRINT_REPORT = 'print::report';
@@ -38,7 +39,7 @@ module.exports = function (grunt) {
     footer = readFile(__dirname + '/files/treeshake_footer.js') + readFile(__dirname + '/files/wrap_footer.js');
 
     function getLookupRegExp(options) {
-        return new RegExp('(' + options.aliases + ')([\\W\\s]+(("|\')[\\w|\\.]+\\3))+', 'gim')
+        return new RegExp('(' + ALIASES + ')([\\W\\s]+(("|\')[\\w|\\.]+\\3))+', 'gim')
     }
 
     function getPath(path) {
@@ -59,7 +60,7 @@ module.exports = function (grunt) {
             matches[i] = matches[i].replace(everythingElse, '');
         }
         //if (!matches) {
-        //    console.log(NO_DEF_FOUND.yellow, path);
+        //    grunt.log.writeln(NO_DEF_FOUND.yellow, path);
         //}
         return matches;
     }
@@ -71,13 +72,13 @@ module.exports = function (grunt) {
         var p = [], content = cache[path];
         //var toggle = false;
         //if (path.indexOf('toggleClass') !== -1) {
-        //    console.log(path.blue);
+        //    grunt.log.writeln(path.blue);
         //    toggle = true;
         //}
         content.replace(/(\/\/!|\*)\s+pattern\s+\/(\\\/|.*?)+\//gim, function (match, g1, g2) {
             var rx = match.replace(/.*?pattern\s+\//, '').replace(/\/$/, '');
             //if (toggle) {
-            //    console.log(rx.green);
+            //    grunt.log.writeln(rx.green);
             //}
             p.push({match: match, rx: new RegExp(rx, 'gim')});
             return match;
@@ -273,12 +274,12 @@ module.exports = function (grunt) {
             contents = getPath(path, options);
             contents = removeComments(contents);
         } else {
-            console.log("cannot find path", path.yellow);
+            grunt.log.writeln("cannot find path", path.yellow);
         }
 
         rx = new RegExp('(' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?', 'gm');
         keys = contents.match(rx) || [];
-        rx2 = new RegExp('(' + options.aliases + ')\\(("|\')(\\w\\.?)+\\2,\\s(\\[.*\\])?', 'gm');
+        rx2 = new RegExp('(' + ALIASES + ')\\(("|\')(\\w\\.?)+\\2,\\s(\\[.*\\])?', 'gm');
         keys = keys.concat(contents.match(rx2) || []);
         len = keys && keys.length || 0;
         keys = keys.concat(getAliasKeys(path, wrap) || []);
@@ -421,7 +422,7 @@ module.exports = function (grunt) {
         }
         // these exports will force external definition alias references.
         for (i in exportAs) {
-            console.log(('export ' + i + ' as ' + exportAs[i]).green);
+            grunt.log.writeln(('export ' + i + ' as ' + exportAs[i]).green);
             str += "define('" + exportAs[i] + "', ['" + i + "'], function(fn) {" + NEWLINE +
                 "    return fn;" + NEWLINE +
                 "});" + NEWLINE;
@@ -508,11 +509,8 @@ module.exports = function (grunt) {
         options.ignore = toArray(options.ignore); // inspect files for excluded definitions
         options.exclude = toArray(options.exclude); // filter out just like import filters in. reverse-import.
         options.inspect = toArray(options.inspect); // which files to look through to determine if there are dependencies that need to be included.
-        options.export = toArray(options.export); // determines what shows on the final api. If populated it will only make these items as defines, and everything else as internals so they don't show up on the final api.
-        options.aliases = 'internal|define';
         options.includes = toArray(options.includes); // for including any file. Such as libs or something that doesn't fit our pattern. A force import if you will. This is a force import because it is a list of paths that just get written in.
-
-        cleanReservedWords = new RegExp('\\b(import|' + options.aliases + ')\\b', 'g');
+        cleanReservedWords = new RegExp('\\b(import|' + ALIASES + ')\\b', 'g');
         // we build the whole package structure. We will filter it out later.
         packages = buildPackages(this.files, options);
         ignored = filterHash({}, options.ignore, packages, options.wrap, options);
@@ -522,8 +520,14 @@ module.exports = function (grunt) {
             printExclusions(files, packages, ignored);
         }
         // generate file.
-        writeSources(options.wrap, files, TMP_FILE, options);
-        writeFiles(this.files[0].dest, [TMP_FILE], options, target);
+        if (files.length) {
+            writeSources(options.wrap, files, TMP_FILE, options);
+            writeFiles(this.files[0].dest, [TMP_FILE], options, target);
+        } else {
+            grunt.file.write(TMP_FILE, '');
+            grunt.log.error('No packages found. No files generated.'.red)
+        }
+
     });
 
     grunt.registerMultiTask('treeshake-filesize', 'A Grunt plugin for logging file size.', function () {

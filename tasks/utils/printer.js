@@ -76,14 +76,14 @@ emitter.on(PRINT_FINALIZE, function (evt, data) {
     }
 
     if (options.log === CONSOLE) {
-        emitter.fire(PRINT_LINE, NEWLINE + "Output:");
+        emitter.fire(PRINT_LINE, NEWLINE + "Files generated:");
         emitter.fire(PRINT_LINE, TAB + data.path.blue, (getSize(data.path) + 'k').green);
-        if (data.pathMin) {
+        if (options.minify && data.pathMin) {
             emitter.fire(PRINT_LINE, TAB + data.pathMin.blue, (getSize(data.pathMin) + 'k').green);
         }
     } else {
-        var output = "Output:" + NEWLINE + TAB + data.path + " " + getSize(data.path) + 'k' + NEWLINE;
-        if (data.pathMin) {
+        var output = "Files generated:" + NEWLINE + TAB + data.path + " " + getSize(data.path) + 'k' + NEWLINE;
+        if (options.minify && data.pathMin) {
             output += TAB + data.pathMin + " " + getSize(data.pathMin) + 'k' + NEWLINE;
         }
 

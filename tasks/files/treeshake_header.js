@@ -1,5 +1,6 @@
 // treeshake-header:start //
-var define, internal, finalize;
+var define, internal, finalize = function () {
+};
 (function () {
     var get, defined, pending, initDefinition,
         $cachelyToken = '~',
@@ -83,5 +84,7 @@ var define, internal, finalize;
 
     return define;
 }());
+
+//! ################# YOUR CODE STARTS HERE #################### //
 
 // treeshake-header:end //
