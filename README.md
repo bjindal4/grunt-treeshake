@@ -61,6 +61,13 @@ options: {
 	ignore: ["build/base.js"]
 }
 ```
+### ignorePatterns
+
+**Type:** Boolean
+
+**Default:** false
+
+Should **grunt-treeshake** ignore default patterns.
 
 #### import
 
@@ -75,7 +82,6 @@ options: {
 	import: ["utils.validators.*", "utils.ajax.http"]
 }
 ```	
-
 #### include
 
 Forces files to be injected into the compilation. This is may be useful if you wanted to include another framework like jQuery or Underscore.
