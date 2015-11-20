@@ -1,0 +1,3 @@
+// Mock jQuery
+window.$ = function () {
+};

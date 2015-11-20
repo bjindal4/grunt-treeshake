@@ -1,2 +1,0 @@
-define('util.test', function () {
-});

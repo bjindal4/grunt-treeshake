@@ -1,7 +1,7 @@
-// ## BANNER HERE ###
+// Place your license here...
 (function(exports, global) {
     global["demo"] = exports;
-    var define, internal, finalize;
+    var define, internal, finalize = function() {};
     (function() {
         var get, defined, pending, initDefinition, $cachelyToken = "~", $depsRequiredByDefinitionToken = ".";
         get = Function[$cachelyToken] = Function[$cachelyToken] || function(name) {
@@ -61,27 +61,35 @@
         };
         return define;
     })();
-    //! example/src/app.js
+    //! ################# YOUR CODE STARTS HERE #################### //
+    //! examples/simple/src/app.js
     //! import each
     define("app", [ "http" ], function(http) {
         exports.message = "Hello, world!";
     });
-    //! example/lib/object/each.js
-    define("each", [ "util.test" ], function() {
+    //! examples/simple/lib/custom/object/each.js
+    define("each", [ "isDefined" ], function(isDefined) {
         return function() {
-            return "each";
+            if (isDefined()) {
+                return "each";
+            }
         };
     });
-    //! example/lib/object/test.js
-    define("util.test", function() {});
-    //! example/lib/ajax/http.js
+    //! examples/simple/lib/custom/validators/isDefined.js
+    define("isDefined", function() {
+        return function(val) {
+            return typeof val !== "undefined";
+        };
+    });
+    //! examples/simple/lib/custom/ajax/http.js
     define("http", function() {
         return function() {
             return "http";
         };
     });
-    //! example/lib/nothing.js
-    function nothing() {}
+    //! examples/simple/lib/jquery/jquery.js
+    window.$ = function() {};
+    //! #################  YOUR CODE ENDS HERE  #################### //
     finalize();
 })(this["demo"] || {}, function() {
     return this;

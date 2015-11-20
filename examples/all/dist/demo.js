@@ -1,7 +1,7 @@
-//my banner
+// Place your license here...
 (function(exports, global) {
-    global["util"] = exports;
-    var define, internal, finalize;
+    global["demo"] = exports;
+    var define, internal, finalize = function() {};
     (function() {
         var get, defined, pending, initDefinition, $cachelyToken = "~", $depsRequiredByDefinitionToken = ".";
         get = Function[$cachelyToken] = Function[$cachelyToken] || function(name) {
@@ -61,29 +61,37 @@
         };
         return define;
     })();
-    //! example/lib/ajax/http.js
+    //! ################# YOUR CODE STARTS HERE #################### //
+    //! examples/all/lib/custom/ajax/http.js
     define("http", function() {
         return function() {
             return "http";
         };
     });
-    //! example/lib/ajax/jsonp.js
+    //! examples/all/lib/custom/ajax/jsonp.js
     internal("http.jsonp", [ "http" ], function(http) {
         return http.jsonp = function() {
             console.log("calling ", http());
             return "http.jsonp";
         };
     });
-    //! example/lib/object/util.js
-    define("util", function() {});
-    //! example/lib/directives/my-test.js
+    //! examples/all/lib/custom/object/each.js
+    define("each", [ "isDefined" ], function(isDefined) {
+        return function() {
+            if (isDefined()) {
+                return "each";
+            }
+        };
+    });
+    //! examples/all/lib/custom/directives/my-test.js
     //! pattern /my\-test(\s|\=|\>)/
     define("myTest", function() {
         return function myTest() {};
     });
-    //! example/lib/nothing.js
-    function nothing() {}
+    //! examples/all/lib/jquery/jquery.js
+    window.$ = function() {};
+    //! #################  YOUR CODE ENDS HERE  #################### //
     finalize();
-})(this["util"] || {}, function() {
+})(this["demo"] || {}, function() {
     return this;
 }());
