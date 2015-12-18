@@ -271,7 +271,7 @@ module.exports = function (grunt) {
     }
 
     function findDependencies(path, packages, dependencies, wrap, options, ignored) {
-        var contents = '', i, len, rx, rx2, keys, len, split, keys;
+        var contents = '', i, len, rx, rx2, keys, len, split, keys, contentHead;
         if (grunt.file.exists(path)) {
             contents = getPath(path, options);
             contents = removeComments(contents);
@@ -279,12 +279,13 @@ module.exports = function (grunt) {
             grunt.log.writeln("cannot find path", path.yellow);
         }
 
+        contentHead = contents.split('{').shift();
         rx = new RegExp('(' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?', 'gm');
-        keys = contents.match(rx) || [];
+        keys = contentHead.match(rx) || [];
         rx2 = new RegExp('(' + ALIASES + ')\\(("|\')(\\w\\.?)+\\2,\\s(\\[.*\\])?', 'gm');
         // do the split shift here to only search everything before the first {. So we don't match
         // quoted strings in the file.
-        keys = keys.concat(contents.split('{').shift().match(rx2) || []);
+        keys = keys.concat(contentHead.match(rx2) || []);
         len = keys && keys.length || 0;
         keys = keys.concat(getAliasKeys(path, wrap) || []);
         keys = keys.concat(options.match(contents) || []);
@@ -502,7 +503,7 @@ module.exports = function (grunt) {
                 // keys that don't have a line are because they were not a direct dependency match.
                 // they could have come from the cusom options.match function which could match things
                 // like 'word-word' and then it searches for dependency 'wordWord'. So ignore these.
-                if (!hash[key.value] && key.line !== '') {
+                if (!hash[key.value] && (key.line || key.line === 0) && key.value.match(/^[a-zA-Z]/)) {
                     count += 1;
                     hash[key.value] = true;
                     missing += ('\n  "' + key.value + '" ' + (key.from &&  key.from + ':' + key.line|| key.type)).yellow;
