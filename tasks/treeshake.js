@@ -31,10 +31,11 @@ module.exports = function (grunt) {
     var cache = {};
     var exportAs = {};
     var importPatterns = {};
-    var unfound = [];
     var header, footer, cleanReservedWords;
     var everythingElse = /[^\*\.\w\d]/g;
     var readFile = grunt.file.read;
+    var unfound = [];
+    var unfoundJunkFilter = new RegExp('^(' + ALIASES + '|\\[|\\s)');
 
     header = readFile(__dirname + '/files/wrap_header.js') + readFile(__dirname + '/files/treeshake_header.js');
     footer = readFile(__dirname + '/files/treeshake_footer.js') + readFile(__dirname + '/files/wrap_footer.js');
@@ -346,7 +347,7 @@ module.exports = function (grunt) {
             if (ignored && ignored[key.value] && type !== 'import') {
                 return null;
             }
-            if (!match && !key.value.match(/^(define|\[)/)) {
+            if (!match && !key.value.match(unfoundJunkFilter)) {
                 unfound.push(key);// unfound dependencies.
             }
             if (match && !dependencies[key.value]) {
