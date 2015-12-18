@@ -31,6 +31,7 @@ module.exports = function (grunt) {
     var cache = {};
     var exportAs = {};
     var importPatterns = {};
+    var unfound = [];
     var header, footer, cleanReservedWords;
     var everythingElse = /[^\*\.\w\d]/g;
     var readFile = grunt.file.read;
@@ -280,7 +281,9 @@ module.exports = function (grunt) {
         rx = new RegExp('(' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?', 'gm');
         keys = contents.match(rx) || [];
         rx2 = new RegExp('(' + ALIASES + ')\\(("|\')(\\w\\.?)+\\2,\\s(\\[.*\\])?', 'gm');
-        keys = keys.concat(contents.match(rx2) || []);
+        // do the split shift here to only search everything before the first {. So we don't match
+        // quoted strings in the file.
+        keys = keys.concat(contents.split('{').shift().match(rx2) || []);
         len = keys && keys.length || 0;
         keys = keys.concat(getAliasKeys(path, wrap) || []);
         keys = keys.concat(options.match(contents) || []);
@@ -342,6 +345,9 @@ module.exports = function (grunt) {
             // ignored prevents it from looking up it or it's dependencies.
             if (ignored && ignored[key.value] && type !== 'import') {
                 return null;
+            }
+            if (!match && !key.value.match(/^(define|\[)/)) {
+                unfound.push(key);// unfound dependencies.
             }
             if (match && !dependencies[key.value]) {
                 key = makeKey(key.value, fromPath, match, options, type);
@@ -487,6 +493,27 @@ module.exports = function (grunt) {
         }
     }
 
+    function outputUnfound() {
+        if (unfound.length) {
+            var missing = '', key, hash = {}, count = 0;
+            for(var i = 0; i < unfound.length; i += 1) {
+                key = unfound[i];
+                // keys that don't have a line are because they were not a direct dependency match.
+                // they could have come from the cusom options.match function which could match things
+                // like 'word-word' and then it searches for dependency 'wordWord'. So ignore these.
+                if (!hash[key.value] && key.line !== '') {
+                    count += 1;
+                    hash[key.value] = true;
+                    missing += ('\n  "' + key.value + '" ' + (key.from &&  key.from + ':' + key.line|| key.type)).yellow;
+                }
+            }
+            if (count) {
+                grunt.log.writeln((count + ' match' + (count > 1 && 'es' || '') +' not found:' + missing).yellow);
+                grunt.log.writeln('If you feel this match is in error you can ignore it by adding it to the "ignore" list'.grey);
+            }
+        }
+    }
+
     grunt.registerMultiTask('treeshake', 'Optimize files added', function () {
         var target = this.target,
             packages,
@@ -519,6 +546,7 @@ module.exports = function (grunt) {
         if (options.report === 'verbose') {
             printExclusions(files, packages, ignored);
         }
+        outputUnfound();
         // generate file.
         if (files.length) {
             writeSources(options.wrap, files, TMP_FILE, options);
