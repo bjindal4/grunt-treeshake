@@ -2,7 +2,7 @@
 var define, internal, finalize = function () {
 };
 (function () {
-    var get, defined, pending, initDefinition,
+    var get, defined, pending, definitions, initDefinition,
         $cachelyToken = '~',
         $depsRequiredByDefinitionToken = '.';
 
@@ -65,7 +65,7 @@ var define, internal, finalize = function () {
         }
 
 
-        if (!defined[name]) { // if the item has not been defined
+        if (!defined.hasOwnProperty(name)) { // if the item has not been defined
             for (i = 0; i < len; i++) { // loop through dependencies
                 dependencyName = deps[i]; // get the dependency name
                 args.push(defined.hasOwnProperty(dependencyName) && defined[dependencyName]); // this will push an item even if it is undefined
