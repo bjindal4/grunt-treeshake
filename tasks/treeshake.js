@@ -548,8 +548,8 @@ module.exports = function (grunt) {
         files = filter(options.inspect, packages, options.wrap, options, ignored);
         if (options.report === 'verbose') {
             printExclusions(files, packages, ignored);
+            outputUnfound();
         }
-        outputUnfound();
         // generate file.
         if (files.length) {
             writeSources(options.wrap, files, TMP_FILE, options);
