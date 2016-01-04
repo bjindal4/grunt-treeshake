@@ -511,8 +511,7 @@ module.exports = function (grunt) {
                 }
             }
             if (count) {
-                grunt.log.writeln((count + ' match' + (count > 1 && 'es' || '') +' not found:' + missing).yellow);
-                grunt.log.writeln('If you feel this match is in error you can ignore it by adding it to the "ignore" list'.grey);
+                emitter.fire(PRINT_LINE, (count + ' match' + (count > 1 && 'es' || '') +' not found:' + missing));
             }
         }
     }
