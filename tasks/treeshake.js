@@ -280,7 +280,7 @@ module.exports = function (grunt) {
         }
 
         contentHead = contents.split(/,\s+function\W/).shift();// only the stuff before the first { will have dependencies.
-        contentHead = contentHead.replace(/(\n|\r)/g, '');// remove new lines so we can find the dependencies.
+        contentHead = contentHead.replace(/(\n|\r)/g, ' ');// remove new lines so we can find the dependencies.
         rx = new RegExp('(' + wrap + '\\.|import\\s+)[\\w\\.\\*]+\\(?;?', 'gm');
         keys = contentHead.match(rx) || [];
         rx2 = new RegExp('(' + ALIASES + ')\\(("|\')(\\w\\.?)+\\2,\\s(\\[.*\\])?', 'gm');
