@@ -1,5 +1,8 @@
 module.exports = function (grunt) {
 
+    // hides verbose grunt messages in terminal
+    grunt.log.header = function () {};
+
     grunt.loadTasks('tasks');
 
     var treeshake = {};

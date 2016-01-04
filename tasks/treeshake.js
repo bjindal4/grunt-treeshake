@@ -110,7 +110,7 @@ module.exports = function (grunt) {
                 while (names && names.length) {
                     name = names.shift();
                     if (packages.hasOwnProperty(name) && packages[name] !== path) {
-                        grunt.log.writeln(("overriding definition '" + name + NEWLINE + TAB + "'at: " + packages[name] + "\n\twith: " + path + "\n").yellow);
+                        emitter.fire(PRINT_VERBOSE, ["overriding definition '" + name + "' at: " + packages[name] + " with: " + path]);
                     } else {
                         defs.push(name);
                     }
@@ -555,7 +555,7 @@ module.exports = function (grunt) {
             writeFiles(this.files[0].dest, [TMP_FILE], options, target);
         } else {
             grunt.file.write(TMP_FILE, '');
-            grunt.log.error('No packages found. No files generated.'.red)
+            grunt.log.error('No packages found. No files generated.'.red);
         }
 
     });
