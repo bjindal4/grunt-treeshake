@@ -1,3 +1,4 @@
+/* global require, module, __dirname */
 'use strict';
 var removeComments = require('./utils/removeComments');
 var printer = require('./utils/printer');
@@ -41,7 +42,7 @@ module.exports = function (grunt) {
     footer = readFile(__dirname + '/files/treeshake_footer.js') + readFile(__dirname + '/files/wrap_footer.js');
 
     function getLookupRegExp(options) {
-        return new RegExp('(' + ALIASES + ')([\\W\\s]+(("|\')[\\w|\\.]+\\3))+', 'gim')
+        return new RegExp('(' + ALIASES + ')([\\W\\s]+(("|\')[\\w|\\.]+\\3))+', 'gim');
     }
 
     function getPath(path) {
@@ -556,12 +557,17 @@ module.exports = function (grunt) {
         } else {
             grunt.file.write(TMP_FILE, '');
             grunt.log.error('No packages found. No files generated.'.red);
+            if (grunt.file.exists('.tmpTreeshake')) {
+               grunt.file.delete('.tmpTreeshake');
+            }
         }
 
     });
 
     grunt.registerMultiTask('treeshake-filesize', 'A Grunt plugin for logging file size.', function () {
-        grunt.file.delete('.tmpTreeshake');
+        if (grunt.file.exists('.tmpTreeshake')) {
+           grunt.file.delete('.tmpTreeshake');
+        }
         grunt.log.header = gruntLogHeader;
         emitter.fire(PRINT_FINALIZE, this.data);
     });
