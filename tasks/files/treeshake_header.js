@@ -55,8 +55,8 @@ var define, internal, finalize = function () {
             for (i = 0; i < len; i++) {
                 dependencyName = deps[i];
                 if (definitions[dependencyName]) {
-                    if (pending.hasOwnProperty(dependencyName)) {
-                        throw new Error('Cyclical reference: "' + name + '" referencing "' + dependencyName + '"');
+                    if (!pending.hasOwnProperty(dependencyName)) {
+                        resolve(dependencyName, definitions[dependencyName]);
                     }
                     resolve(dependencyName, definitions[dependencyName]);
                     delete definitions[dependencyName];
