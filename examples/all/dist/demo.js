@@ -3,7 +3,7 @@
     global["demo"] = exports;
     var define, internal, finalize = function() {};
     (function() {
-        var get, defined, pending, initDefinition, $cachelyToken = "~", $depsRequiredByDefinitionToken = ".";
+        var get, defined, pending, definitions, initDefinition, $cachelyToken = "~", $depsRequiredByDefinitionToken = ".";
         get = Function[$cachelyToken] = Function[$cachelyToken] || function(name) {
             if (!get[name]) {
                 get[name] = {};
@@ -37,15 +37,15 @@
                 for (i = 0; i < len; i++) {
                     dependencyName = deps[i];
                     if (definitions[dependencyName]) {
-                        if (pending.hasOwnProperty(dependencyName)) {
-                            throw new Error('Cyclical reference: "' + name + '" referencing "' + dependencyName + '"');
+                        if (!pending.hasOwnProperty(dependencyName)) {
+                            resolve(dependencyName, definitions[dependencyName]);
                         }
                         resolve(dependencyName, definitions[dependencyName]);
                         delete definitions[dependencyName];
                     }
                 }
             }
-            if (!defined[name]) {
+            if (!defined.hasOwnProperty(name)) {
                 for (i = 0; i < len; i++) {
                     dependencyName = deps[i];
                     args.push(defined.hasOwnProperty(dependencyName) && defined[dependencyName]);
@@ -92,6 +92,7 @@
     window.$ = function() {};
     //! #################  YOUR CODE ENDS HERE  #################### //
     finalize();
+    return global["demo"];
 })(this["demo"] || {}, function() {
     return this;
 }());
