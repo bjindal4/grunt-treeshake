@@ -91,6 +91,21 @@ module.exports = function (grunt) {
         }
     }
 
+    function getIgnoredDefinitions(ignoredList) {
+        var ignoredItems = {};
+        var files = grunt.file.expand(ignoredList);
+        var len = files.length;
+        var file, definitions;
+        for (var i = 0; i < len; i++) {
+            file = grunt.file.read(files[i]);
+            var definitions = file.replace(/(internal|define)\("([\w\.-]+)/gim, function(m, g1, g2) {
+                ignoredItems[g2] = true;
+                return m;
+            });
+        }
+        return ignoredItems;
+    }
+
     /**
      * Build up all of the packages provided from the config.
      * @param {Object} files
@@ -500,7 +515,7 @@ module.exports = function (grunt) {
     function outputUnfound() {
         if (unfound.length) {
             var missing = '', key, hash = {}, count = 0;
-            for(var i = 0; i < unfound.length; i += 1) {
+            for (var i = 0; i < unfound.length; i += 1) {
                 key = unfound[i];
                 // keys that don't have a line are because they were not a direct dependency match.
                 // they could have come from the cusom options.match function which could match things
@@ -508,11 +523,11 @@ module.exports = function (grunt) {
                 if (!hash[key.value] && (key.line || key.line === 0) && key.value.match(/^[a-zA-Z]/)) {
                     count += 1;
                     hash[key.value] = true;
-                    missing += ('\n  "' + key.value + '" ' + (key.from &&  key.from + ':' + key.line|| key.type)).yellow;
+                    missing += ('\n  "' + key.value + '" ' + (key.from && key.from + ':' + key.line || key.type)).yellow;
                 }
             }
             if (count) {
-                emitter.fire(PRINT_LINE, (count + ' match' + (count > 1 && 'es' || '') +' not found:' + missing));
+                emitter.fire(PRINT_LINE, (count + ' match' + (count > 1 && 'es' || '') + ' not found:' + missing));
             }
         }
     }
@@ -543,7 +558,8 @@ module.exports = function (grunt) {
         cleanReservedWords = new RegExp('\\b(import|' + ALIASES + ')\\b', 'g');
         // we build the whole package structure. We will filter it out later.
         packages = buildPackages(this.files, options);
-        ignored = filterHash({}, options.ignore, packages, options.wrap, options);
+        ignored = getIgnoredDefinitions(options.ignore);
+        //console.log('#ignored', ignored);
         buildExclusions(options.exclude, packages, ignored, options);
         files = filter(options.inspect, packages, options.wrap, options, ignored);
         if (options.report === 'verbose') {
@@ -558,7 +574,7 @@ module.exports = function (grunt) {
             grunt.file.write(TMP_FILE, '');
             grunt.log.error('No packages found. No files generated.'.red);
             if (grunt.file.exists('.tmpTreeshake')) {
-               grunt.file.delete('.tmpTreeshake');
+                grunt.file.delete('.tmpTreeshake');
             }
         }
 
@@ -566,7 +582,7 @@ module.exports = function (grunt) {
 
     grunt.registerMultiTask('treeshake-filesize', 'A Grunt plugin for logging file size.', function () {
         if (grunt.file.exists('.tmpTreeshake')) {
-           grunt.file.delete('.tmpTreeshake');
+            grunt.file.delete('.tmpTreeshake');
         }
         grunt.log.header = gruntLogHeader;
         emitter.fire(PRINT_FINALIZE, this.data);
