@@ -69,12 +69,13 @@ module.exports = function (grunt) {
             // the file that bootstraps your application. By referencing this file treeshake will then start
             // traversing through other referenced definitions used by the other JS files.
             log: 'console',// 'examples/ignored/logs/ignored.log', // export a log file to this location
-            report: false, // verbose = gimme the details, false = report nothing.
-            includes: ['examples/simple/lib/jquery/jquery.js'],
-            ignore: ['examples/ignored/lib/custom/ajax/jsonp.js'],
+            report: false, //"verbose", // verbose = gimme the details, false = report nothing.
+            includes: ['examples/simple/lib/jquery/jquery.js'],// force includes
+            ignore: ['examples/ignored/lib/custom/ajax/*'],//['examples/ignored/lib/custom/ajax/jsonp.js'],
         },
+        // files only means that it will use these to define values it can use.
         files: {
-            'examples/simple/dist/demo.js': ['examples/ignored/src/*.js', 'examples/ignored/lib/**/*.js']
+            'examples/ignored/dist/demo.js': ['examples/ignored/src/*.js', 'examples/ignored/lib/**/*.js']
         }
     };
 

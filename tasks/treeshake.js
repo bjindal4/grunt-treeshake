@@ -95,13 +95,7 @@ module.exports = function (grunt) {
 
     function getIgnoredDefinitions(ignoredList, packages) {
         var ignoredItems = {};
-        var files = grunt.file.expand(ignoredList.filter(function(val) {
-            var isSrc = val.split('.').pop().toLowerCase() === 'js';
-            if (!isSrc && packages[val]) {// it is a name, and the file has already been looked up.
-                ignoredItems[packages[val]] = true;// so set the file paths from the packages.
-            }
-            return isSrc;// it is a file. let it be looked up an inspected.
-        }));
+        var files = grunt.file.expand(ignoredList);
         var len = files.length;
         var file;
         for (var i = 0; i < len; i++) {
@@ -151,7 +145,7 @@ module.exports = function (grunt) {
         }
         return packages;
     }
-
+//TODO: exclude? maybe later.
     function buildExclusions(exclusions, packages, dependencies, options) {
         getPackageMatches('Gruntfile.js', packages, exclusions, options, 'exclude', dependencies, false);
         return dependencies;

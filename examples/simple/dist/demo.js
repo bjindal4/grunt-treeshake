@@ -81,11 +81,23 @@
             return typeof val !== "undefined";
         };
     });
-    //! examples/ignored/lib/custom/ajax/http.js
-    //! import each
-    define("http", function() {
+    //! examples/ignored/lib/custom/directives/my-test.js
+    //! pattern /my\-test(\s|\=|\>)/
+    define("myTest", function() {
+        return function myTest() {};
+    });
+    //! examples/ignored/lib/custom/object/extend.js
+    define("extend", [ "isDefined" ], function(isDefined) {
         return function() {
-            return "http";
+            var result = isDefined();
+            console.log(result);
+            return "each";
+        };
+    });
+    //! examples/ignored/lib/custom/validators/isNumber.js
+    define("isNumber", function() {
+        return function(val) {
+            return !isNaN(val);
         };
     });
     //! examples/simple/lib/jquery/jquery.js
