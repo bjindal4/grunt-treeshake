@@ -30,6 +30,7 @@ module.exports = function (grunt) {
     var TMP_FILE = '.tmpTreeshake/treeshake.js';
 
     var cache = {};
+    var ignored = {};// so it doesn't have to be passed around everywhere.
     var exportAs = {};
     var importPatterns = {};
     var header, footer, cleanReservedWords;
@@ -37,11 +38,12 @@ module.exports = function (grunt) {
     var readFile = grunt.file.read;
     var unfound = [];
     var unfoundJunkFilter = new RegExp('^(' + ALIASES + '|\\[|\\s)');
+    var ignoreRx = /(internal|define)\(("|')(.*?)\2,/gim;// defined once.
 
     header = readFile(__dirname + '/files/wrap_header.js') + readFile(__dirname + '/files/treeshake_header.js');
     footer = readFile(__dirname + '/files/treeshake_footer.js') + readFile(__dirname + '/files/wrap_footer.js');
 
-    function getLookupRegExp(options) {
+    function getLookupRegExp() {
         return new RegExp('(' + ALIASES + ')([\\W\\s]+(("|\')[\\w|\\.]+\\3))+', 'gim');
     }
 
@@ -53,9 +55,9 @@ module.exports = function (grunt) {
         return cache[path];
     }
 
-    function getFileNameFromContents(path, options) {
-        var contents = getPath(path, options),
-            rx = getLookupRegExp(options),
+    function getFileNameFromContents(path) {
+        var contents = getPath(path),
+            rx = getLookupRegExp(),
             matches = contents.match(rx), i, len = matches && matches.length || 0;
         for (i = 0; i < len; i += 1) {
             matches[i] = matches[i].split(',').shift();// only get the first match in a statement.
@@ -91,15 +93,24 @@ module.exports = function (grunt) {
         }
     }
 
-    function getIgnoredDefinitions(ignoredList) {
+    function getIgnoredDefinitions(ignoredList, packages) {
         var ignoredItems = {};
-        var files = grunt.file.expand(ignoredList);
+        var files = grunt.file.expand(ignoredList.filter(function(val) {
+            var isSrc = val.split('.').pop().toLowerCase() === 'js';
+            if (!isSrc && packages[val]) {// it is a name, and the file has already been looked up.
+                ignoredItems[packages[val]] = true;// so set the file paths from the packages.
+            }
+            return isSrc;// it is a file. let it be looked up an inspected.
+        }));
         var len = files.length;
-        var file, definitions;
+        var file;
         for (var i = 0; i < len; i++) {
             file = grunt.file.read(files[i]);
-            var definitions = file.replace(/(internal|define)\("([\w\.-]+)/gim, function(m, g1, g2) {
-                ignoredItems[g2] = true;
+            file.replace(ignoreRx, function(m, g1, g2, g3) {
+                ignoredItems[g3] = true;
+                if (packages[g3]) {
+                    ignoredItems[packages[g3]] = true;
+                }
                 return m;
             });
         }
@@ -154,16 +165,16 @@ module.exports = function (grunt) {
         }
     }
 
-    function filterHash(dependencies, paths, packages, wrap, options, ignored) {
+    function filterHash(dependencies, paths, packages, wrap, options) {
         paths = paths || [];
         var i, len = paths.length, expanded;
         dependencies = dependencies || {};
         for (i = 0; i < len; i += 1) {
             if (paths[i].indexOf('*') !== -1) {
                 expanded = grunt.file.expand(paths[i]);
-                filterHash(dependencies, expanded, packages, wrap, options, ignored);
+                filterHash(dependencies, expanded, packages, wrap, options);
             } else if (grunt.file.exists(paths[i])) {
-                findDependencies(paths[i], packages, dependencies, wrap, options, ignored);
+                findDependencies(paths[i], packages, dependencies, wrap, options);
             }
         }
         return dependencies;
@@ -176,23 +187,26 @@ module.exports = function (grunt) {
      * @param {Object} packages
      * @param {String} wrap
      * @param {Object} options
-     * @param {Array} ignored
      * @returns []
      */
-    function filter(paths, packages, wrap, options, ignored) {
+    function filter(paths, packages, wrap, options) {
         paths = paths || [];
         var result = [], i, dependencies = {}, written = {};
         // if they provide imports. We need to add them.
         if (options.import) {
             // populates those on dependencies.
-            findKeys('Gruntfile.js', options.import, packages, dependencies, wrap, options, 'import', ignored);
+            findKeys('Gruntfile.js', options.import, packages, dependencies, wrap, options, 'import');
         }
-        filterHash(dependencies, paths, packages, wrap, options, ignored);
+        filterHash(dependencies, paths, packages, wrap, options);
         emitter.fire(PRINT_REPORT, NEWLINE + 'Included:');
         for (i in dependencies) {
-            if (dependencies.hasOwnProperty(i) && !written[dependencies[i].src]) {
-                written[dependencies[i].src] = true;
-                result.push(dependencies[i]);
+            if (dependencies.hasOwnProperty(i)) {
+                if (ignored[dependencies[i].src] || ignored[dependencies[i].value]) {
+                    //grunt.log.writeln(("INGORE:"+dependencies[i].src).yellow);
+                } else if (!written[dependencies[i].src]) {
+                    written[dependencies[i].src] = true;
+                    result.push(dependencies[i]);
+                }
             } else {
                 // this is for duplicates that are skipped because they has multiple references in multiple files.
                 //grunt.log.writeln("SKIP " + dependencies[i].src);
@@ -286,7 +300,7 @@ module.exports = function (grunt) {
         }
     }
 
-    function findDependencies(path, packages, dependencies, wrap, options, ignored) {
+    function findDependencies(path, packages, dependencies, wrap, options) {
         var contents = '', i, len, rx, rx2, keys, len, split, keys, contentHead;
         if (grunt.file.exists(path)) {
             contents = getPath(path, options);
@@ -326,7 +340,7 @@ module.exports = function (grunt) {
             }
         }
         if (keys) {
-            findKeys(path, keys, packages, dependencies, wrap, options, 'file', ignored);
+            findKeys(path, keys, packages, dependencies, wrap, options, 'file');
             return dependencies;// dependencies
         }
     }
@@ -353,7 +367,7 @@ module.exports = function (grunt) {
         }
     }
 
-    function getPackageMatch(fromPath, packages, statementOrKey, options, type, dependencies, findAdditionalDependencies, ignored) {
+    function getPackageMatch(fromPath, packages, statementOrKey, options, type, dependencies, findAdditionalDependencies) {
         var i, names, name, match, key = statementOrKey;
         dependencies = dependencies || {};
         if (key) {
@@ -372,7 +386,7 @@ module.exports = function (grunt) {
                 key = makeKey(key.value, fromPath, match, options, type);
                 dependencies[key.value] = key;
                 if (findAdditionalDependencies) {
-                    findDependencies(match, packages, dependencies, options.wrap, options, ignored);
+                    findDependencies(match, packages, dependencies, options.wrap, options);
                 }
             } else if (key.value && key.value.indexOf && key.value.indexOf('*') !== -1) {
                 // these will be strings not objects for keys.
@@ -385,7 +399,7 @@ module.exports = function (grunt) {
                             if (!ignored || !ignored[name] || key.type === 'import') {
                                 dependencies[name] = makeKey(key.value, fromPath, packages[name], options, type);
                                 if (findAdditionalDependencies) {
-                                    findDependencies(packages[i], packages, dependencies, options.wrap, options, ignored);
+                                    findDependencies(packages[i], packages, dependencies, options.wrap, options);
                                 }
                             }
                         }
@@ -396,17 +410,26 @@ module.exports = function (grunt) {
         return key;
     }
 
-    function findKeys(path, keys, packages, dependencies, wrap, options, forceType, ignored) {
+    function findKeys(path, keys, packages, dependencies, wrap, options, forceType) {
         var len = keys.length, i;// match, i, names, j, key, name;
         for (i = 0; i < len; i += 1) {
-            getPackageMatch(path, packages, keys[i], options, forceType, dependencies, true, ignored);
+            getPackageMatch(path, packages, keys[i], options, forceType, dependencies, true);
         }
     }
 
-    function printExclusions(files, packages, ignored) {
+    function printExclusions(files, packages) {
+        var ignoredList = Object.keys(ignored);
         emitter.fire(PRINT_LINE, NEWLINE + "Ignored:");
-        emitter.fire(PRINT_IGNORED, ignored);
+        emitter.fire(PRINT_IGNORED, ignoredList);
         var len = files.length, i, j, found, result = [];
+        // makes sure all ignored files show up in the ignored list even it it was already removed from package.
+        // so the log shows that it was ignored.
+        ignoredList.map(function(path) {
+            if (path.split('.').pop().toLowerCase() === 'js') {
+                result.push(path);
+            }
+        });
+        // now filter out any packages that are ignored.
         for (i in packages) {
             if (packages.hasOwnProperty(i)) {
                 found = null;
@@ -505,7 +528,8 @@ module.exports = function (grunt) {
                 path: dest,
                 pathMin: dest.substr(0, dest.length - 3) + '.min.js',
                 log: options.log,
-                gruntLogHeader: options.gruntLogHeader
+                gruntLogHeader: options.gruntLogHeader,
+                report: options.report
             };
             grunt.config.set('treeshake-filesize', filesize);
             grunt.task.run('treeshake-filesize:' + target);
@@ -535,8 +559,7 @@ module.exports = function (grunt) {
     grunt.registerMultiTask('treeshake', 'Optimize files added', function () {
         var target = this.target,
             packages,
-            files,
-            ignored;
+            files;
 
         var options = this.options({
             wrap: this.target,
@@ -558,12 +581,12 @@ module.exports = function (grunt) {
         cleanReservedWords = new RegExp('\\b(import|' + ALIASES + ')\\b', 'g');
         // we build the whole package structure. We will filter it out later.
         packages = buildPackages(this.files, options);
-        ignored = getIgnoredDefinitions(options.ignore);
+        ignored = getIgnoredDefinitions(options.ignore, packages);
         //console.log('#ignored', ignored);
-        buildExclusions(options.exclude, packages, ignored, options);
-        files = filter(options.inspect, packages, options.wrap, options, ignored);
+        //buildExclusions(options.exclude, packages, ignored, options);// don't know why we ever had this.
+        files = filter(options.inspect, packages, options.wrap, options);
         if (options.report === 'verbose') {
-            printExclusions(files, packages, ignored);
+            printExclusions(files, packages);
             outputUnfound();
         }
         // generate file.

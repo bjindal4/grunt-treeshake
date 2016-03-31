@@ -62,12 +62,12 @@
         return define;
     })();
     //! ################# YOUR CODE STARTS HERE #################### //
-    //! examples/ignored/src/app.js
+    //! examples/simple/src/app.js
     //! import each
     define("app", [ "http" ], function(http) {
         exports.message = "Hello, world!";
     });
-    //! examples/ignored/lib/custom/object/each.js
+    //! examples/simple/lib/custom/object/each.js
     define("each", [ "isDefined" ], function(isDefined) {
         return function() {
             if (isDefined()) {
@@ -75,14 +75,13 @@
             }
         };
     });
-    //! examples/ignored/lib/custom/validators/isDefined.js
+    //! examples/simple/lib/custom/validators/isDefined.js
     define("isDefined", function() {
         return function(val) {
             return typeof val !== "undefined";
         };
     });
-    //! examples/ignored/lib/custom/ajax/http.js
-    //! import each
+    //! examples/simple/lib/custom/ajax/http.js
     define("http", function() {
         return function() {
             return "http";
