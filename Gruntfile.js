@@ -49,12 +49,33 @@ module.exports = function (grunt) {
             import: ['app'], // You always need to import at least one definition. Typically this will be the
             // the file that bootstraps your application. By referencing this file treeshake will then start
             // traversing through other referenced definitions used by the other JS files.
-            log: 'examples/simple/logs/simple.log', // export a log file to this location
+            log: 'console',//'examples/simple/logs/simple.log', // export a log file to this location
             report: 'verbose', // gimme the details
             includes: ['examples/simple/lib/jquery/jquery.js']
         },
         files: {
             'examples/simple/dist/demo.js': ['examples/simple/src/*.js', 'examples/simple/lib/**/*.js']
+        }
+    };
+
+    // This is an example on how to use the most common features
+    treeshake.ignored = {
+        options: {
+            banner: '// Place your license here...',
+            wrap: 'demo',
+            minify: true, // create a minified file
+            ignorePatterns: true,
+            import: ['app'], // You always need to import at least one definition. Typically this will be the
+            // the file that bootstraps your application. By referencing this file treeshake will then start
+            // traversing through other referenced definitions used by the other JS files.
+            log: 'console',// 'examples/ignored/logs/ignored.log', // export a log file to this location
+            report: false, //"verbose", // verbose = gimme the details, false = report nothing.
+            includes: ['examples/simple/lib/jquery/jquery.js'],// force includes
+            ignore: ['examples/ignored/lib/custom/ajax/*'],//['examples/ignored/lib/custom/ajax/jsonp.js'],
+        },
+        // files only means that it will use these to define values it can use.
+        files: {
+            'examples/ignored/dist/demo.js': ['examples/ignored/src/*.js', 'examples/ignored/lib/**/*.js']
         }
     };
 
@@ -83,5 +104,6 @@ module.exports = function (grunt) {
     grunt.registerTask('default', 'treeshake');
     grunt.registerTask('all', 'treeshake:all');
     grunt.registerTask('simple', 'treeshake:simple');
+    grunt.registerTask('ignored', 'treeshake:ignored');
     grunt.registerTask('empty', 'treeshake:empty');
 };

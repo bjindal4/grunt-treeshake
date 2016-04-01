@@ -62,12 +62,12 @@
         return define;
     })();
     //! ################# YOUR CODE STARTS HERE #################### //
-    //! examples/ignored/src/app.js
+    //! examples/simple/src/app.js
     //! import each
     define("app", [ "http" ], function(http) {
         exports.message = "Hello, world!";
     });
-    //! examples/ignored/lib/custom/object/each.js
+    //! examples/simple/lib/custom/object/each.js
     define("each", [ "isDefined" ], function(isDefined) {
         return function() {
             if (isDefined()) {
@@ -75,29 +75,16 @@
             }
         };
     });
-    //! examples/ignored/lib/custom/validators/isDefined.js
+    //! examples/simple/lib/custom/validators/isDefined.js
     define("isDefined", function() {
         return function(val) {
             return typeof val !== "undefined";
         };
     });
-    //! examples/ignored/lib/custom/directives/my-test.js
-    //! pattern /my\-test(\s|\=|\>)/
-    define("myTest", function() {
-        return function myTest() {};
-    });
-    //! examples/ignored/lib/custom/object/extend.js
-    define("extend", [ "isDefined" ], function(isDefined) {
+    //! examples/simple/lib/custom/ajax/http.js
+    define("http", function() {
         return function() {
-            var result = isDefined();
-            console.log(result);
-            return "each";
-        };
-    });
-    //! examples/ignored/lib/custom/validators/isNumber.js
-    define("isNumber", function() {
-        return function(val) {
-            return !isNaN(val);
+            return "http";
         };
     });
     //! examples/simple/lib/jquery/jquery.js

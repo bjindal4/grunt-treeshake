@@ -16,6 +16,9 @@ var PRINT_IGNORED = 'print:ignored';
 var PRINT_FINALIZE = 'print::finalize';
 
 var log = function () {
+    if (!options.report) {
+        return;
+    }
     var args = Array.prototype.slice.call(arguments);
     if (options.log === CONSOLE) {
         grunt.log.writeln.apply(grunt.log, args);
