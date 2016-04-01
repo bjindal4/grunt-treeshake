@@ -16,9 +16,6 @@ var PRINT_IGNORED = 'print:ignored';
 var PRINT_FINALIZE = 'print::finalize';
 
 var log = function () {
-    if (!options.report) {
-        return;
-    }
     var args = Array.prototype.slice.call(arguments);
     if (options.log === CONSOLE) {
         grunt.log.writeln.apply(grunt.log, args);
@@ -84,7 +81,7 @@ emitter.on(PRINT_FINALIZE, function (evt, data) {
         if (options.minify && data.pathMin) {
             emitter.fire(PRINT_LINE, TAB + data.pathMin.blue, (getSize(data.pathMin) + 'k').green);
         }
-    } else {
+    } else if (options.report) {
         var output = "Files generated:" + NEWLINE + TAB + data.path + " " + getSize(data.path) + 'k' + NEWLINE;
         if (options.minify && data.pathMin) {
             output += TAB + data.pathMin + " " + getSize(data.pathMin) + 'k' + NEWLINE;
@@ -96,10 +93,10 @@ emitter.on(PRINT_FINALIZE, function (evt, data) {
     }
 });
 
-exports.setGrunt = function(val) {
+exports.setGrunt = function (val) {
     grunt = val;
 };
 
-exports.setOptions = function(val) {
+exports.setOptions = function (val) {
     options = val;
 };
