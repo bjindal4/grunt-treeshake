@@ -1,11 +1,7 @@
 {
   "name": "grunt-treeshake",
   "description": "Imports and compiles only the JavaScript files referenced in a project",
-<<<<<<< HEAD
-  "version": "1.3.0",
-=======
-  "version": "1.2.15",
->>>>>>> f8500e8dfb068dc8826b909e8380cdf562aee33c
+  "version": "1.3.1",
   "homepage": "https://github.com/obogo/grunt-treeshake",
   "author": {
     "name": "Obogo Team",
