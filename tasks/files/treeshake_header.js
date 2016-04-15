@@ -24,6 +24,9 @@ var define, internal, finalize = function () {
      * Initializes
      */
     initDefinition = function (name) {
+        if(defined[name]) {
+            return;
+        }
         var args = arguments;
         var val = args[1];
         if (typeof val === 'function') {
