@@ -14,6 +14,9 @@
         defined = get("d");
         pending = get("p");
         initDefinition = function(name) {
+            if (defined[name]) {
+                return;
+            }
             var args = arguments;
             var val = args[1];
             if (typeof val === "function") {
@@ -62,12 +65,12 @@
         return define;
     })();
     //! ################# YOUR CODE STARTS HERE #################### //
-    //! examples/simple/src/app.js
+    //! examples/ignored/src/app.js
     //! import each
     define("app", [ "http" ], function(http) {
         exports.message = "Hello, world!";
     });
-    //! examples/simple/lib/custom/object/each.js
+    //! examples/ignored/lib/custom/object/each.js
     define("each", [ "isDefined" ], function(isDefined) {
         return function() {
             if (isDefined()) {
@@ -75,16 +78,10 @@
             }
         };
     });
-    //! examples/simple/lib/custom/validators/isDefined.js
+    //! examples/ignored/lib/custom/validators/isDefined.js
     define("isDefined", function() {
         return function(val) {
             return typeof val !== "undefined";
-        };
-    });
-    //! examples/simple/lib/custom/ajax/http.js
-    define("http", function() {
-        return function() {
-            return "http";
         };
     });
     //! examples/simple/lib/jquery/jquery.js

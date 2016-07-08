@@ -14,6 +14,9 @@
         defined = get("d");
         pending = get("p");
         initDefinition = function(name) {
+            if (defined[name]) {
+                return;
+            }
             var args = arguments;
             var val = args[1];
             if (typeof val === "function") {
@@ -81,6 +84,12 @@
             if (isDefined()) {
                 return "each";
             }
+        };
+    });
+    //! examples/all/lib/custom/validators/isDefined.js
+    define("isDefined", function() {
+        return function(val) {
+            return typeof val !== "undefined";
         };
     });
     //! examples/all/lib/custom/directives/my-test.js

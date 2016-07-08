@@ -46,6 +46,7 @@ module.exports = function (grunt) {
             wrap: 'demo',
             minify: true, // create a minified file
             ignorePatterns: true,
+            embedRequire: false,
             import: ['app'], // You always need to import at least one definition. Typically this will be the
             // the file that bootstraps your application. By referencing this file treeshake will then start
             // traversing through other referenced definitions used by the other JS files.

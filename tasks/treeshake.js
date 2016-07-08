@@ -33,15 +33,17 @@ module.exports = function (grunt) {
     var ignored = {};// so it doesn't have to be passed around everywhere.
     var exportAs = {};
     var importPatterns = {};
-    var header, footer, cleanReservedWords;
+    var wrapHeader, wrapFooter, treeshakeHeader, treeshakeFooter, cleanReservedWords;
     var everythingElse = /[^\*\.\w\d]/g;
     var readFile = grunt.file.read;
     var unfound = [];
     var unfoundJunkFilter = new RegExp('^(' + ALIASES + '|\\[|\\s)');
     var ignoreRx = /(internal|define)\(("|')(.*?)\2,/gim;// defined once.
 
-    header = readFile(__dirname + '/files/wrap_header.js') + readFile(__dirname + '/files/treeshake_header.js');
-    footer = readFile(__dirname + '/files/treeshake_footer.js') + readFile(__dirname + '/files/wrap_footer.js');
+    wrapHeader = readFile(__dirname + '/files/wrap_header.js');
+    wrapFooter = readFile(__dirname + '/files/wrap_footer.js');
+    treeshakeHeader = readFile(__dirname + '/files/treeshake_header.js');
+    treeshakeFooter = readFile(__dirname + '/files/treeshake_footer.js');
 
     function getLookupRegExp() {
         return new RegExp('(' + ALIASES + ')([\\W\\s]+(("|\')[\\w|\\.]+\\3))+', 'gim');
@@ -447,13 +449,16 @@ module.exports = function (grunt) {
 
     function writeSources(wrap, files, dest, options) {
         // first we put our header on there for define and require.
-        var str = header, i, len, key;
+        var str = wrapHeader, i, len, key;
+        if(options.embedRequire !== false) {
+            str += treeshakeHeader;
+        }
         len = options.includes.length, key;
         if (len) {
             emitter.fire(PRINT_LINE, NEWLINE + 'Forced Includes:');
             for (i = 0; i < len; i += 1) {
                 key = makeKey('include.' + i, 'Gruntfile.js', options.includes[i], options, 'include');
-                files.push(key);
+                files.unshift(key);
                 emitter.fire(PRINT_FILE, key, {color: 'yellow'});
             }
         }
@@ -469,7 +474,10 @@ module.exports = function (grunt) {
                 "    return fn;" + NEWLINE +
                 "});" + NEWLINE;
         }
-        str += footer;
+        if(options.embedRequire !== false) {
+            str += treeshakeFooter;
+        }
+        str += wrapFooter;
         str = str.split('{$$namespace}').join(wrap);
 
         grunt.file.write(dest, str);
